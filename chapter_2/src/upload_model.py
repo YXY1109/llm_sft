@@ -6,7 +6,7 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 点击右上角头像 → Settings → Access Tokens。
 生成一个具有write权限的新令牌（记录该令牌，后续会用到）。
 """
-login(token="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")
+login(token="")
 print("登录成功！")
 
 # 加载本地微调好的模型和分词器
