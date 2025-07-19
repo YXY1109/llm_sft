@@ -2,6 +2,8 @@
 
 > https://github.com/jingyaogong/minimind
 
+## 预训练和SFT微调，基于AutoDL
+
 ## 拉取github代码
 
 ```
