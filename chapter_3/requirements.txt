@@ -1,8 +1,8 @@
-swanlab
-modelscope==1.22.0
-transformers
-datasets==3.2.0
-peft
-accelerate
-pandas
-addict
+modelscope==1.28.0
+numpy==1.26.4
+datasets==3.6.0
+addict==2.4.0
+transformers==4.53.2
+accelerate==1.9.0
+swanlab==0.6.7
+peft==0.16.0

@@ -203,3 +203,5 @@ __marimo__/
 .streamlit/secrets.toml
 
 .idea
+/chapter_3/models/
+/chapter_3/swanlog/
