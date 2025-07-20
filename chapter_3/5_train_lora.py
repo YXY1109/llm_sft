@@ -134,7 +134,7 @@ eval_ds = Dataset.from_pandas(eval_df)
 eval_dataset = eval_ds.map(process_func, remove_columns=eval_ds.column_names)
 
 args = TrainingArguments(
-    output_dir=".models/train_lora/Qwen3-1.7B",
+    output_dir="models/train_lora/Qwen3-1.7B",
     per_device_train_batch_size=1,
     per_device_eval_batch_size=1,
     gradient_accumulation_steps=4,
