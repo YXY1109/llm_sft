@@ -1,6 +1,9 @@
+import os
+
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
+
 
 def predict(messages, model, tokenizer):
     if torch.backends.mps.is_available():
@@ -14,18 +17,23 @@ def predict(messages, model, tokenizer):
     model_inputs = tokenizer([text], return_tensors="pt").to(device)
 
     generated_ids = model.generate(model_inputs.input_ids, max_new_tokens=2048)
-    generated_ids = [output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)]
+    generated_ids = [output_ids[len(input_ids):] for input_ids, output_ids in
+                     zip(model_inputs.input_ids, generated_ids)]
     response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
     return response
 
 
+root_path = os.path.dirname(os.path.abspath(__file__))
+model_name = os.path.join(root_path, "models/Qwen/Qwen3-1___7B")
+
 # 加载原下载路径的tokenizer和model
-tokenizer = AutoTokenizer.from_pretrained("./Qwen/Qwen3-1.7B", use_fast=False, trust_remote_code=True)
-model = AutoModelForCausalLM.from_pretrained("./Qwen/Qwen3-1.7B", device_map="auto", torch_dtype=torch.bfloat16)
+tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False, trust_remote_code=True)
+model = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", torch_dtype=torch.bfloat16)
 
 # 加载lora模型
-model = PeftModel.from_pretrained(model, model_id="./output/Qwen3-1.7B/checkpoint-1082")
+lora_name = os.path.join(root_path, "models/train_lora/Qwen3-1.7B/checkpoint-1084")
+model = PeftModel.from_pretrained(model, model_id=lora_name)
 
 test_texts = {
     'instruction': "你是一个医学专家，你需要根据用户的问题，给出带有思考的回答。",
