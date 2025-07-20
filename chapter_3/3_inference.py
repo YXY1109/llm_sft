@@ -25,7 +25,7 @@ def predict(messages, model, tokenizer):
 
 # 原始模型路径
 root_path = os.path.dirname(os.path.abspath(__file__))
-model_name = os.path.join(root_path, "models/Qwen/Qwen3-1___7B")
+model_name = os.path.join(root_path, "models/Qwen/Qwen3-1.7B")
 
 # 加载原下载路径的tokenizer和model
 tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False, trust_remote_code=True)

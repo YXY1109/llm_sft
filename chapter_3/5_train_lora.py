@@ -92,7 +92,7 @@ def predict(messages, model, tokenizer):
 
 
 root_path = os.path.dirname(os.path.abspath(__file__))
-model_name = os.path.join(root_path, "models/Qwen/Qwen3-1___7B")
+model_name = os.path.join(root_path, "models/Qwen/Qwen3-1.7B")
 
 # Transformers加载模型权重
 tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False, trust_remote_code=True)
@@ -141,7 +141,7 @@ args = TrainingArguments(
     eval_strategy="steps",
     eval_steps=100,
     logging_steps=10,
-    num_train_epochs=2,
+    num_train_epochs=1,
     save_steps=400,
     learning_rate=1e-4,
     save_on_each_node=True,
@@ -161,29 +161,29 @@ trainer = Trainer(
 trainer.train()
 print("训练完成！")
 
-# 用测试集的前3条，主观看模型
-test_df = pd.read_json(test_jsonl_new_path, lines=True)[:3]
-
-test_text_list = []
-
-for index, row in test_df.iterrows():
-    instruction = row['instruction']
-    input_value = row['input']
-
-    messages = [
-        {"role": "system", "content": f"{instruction}"},
-        {"role": "user", "content": f"{input_value}"}
-    ]
-
-    response = predict(messages, model, tokenizer)
-
-    response_text = f"""
-    Question: {input_value}
-
-    LLM:{response}
-    """
-
-    test_text_list.append(swanlab.Text(response_text))
-    print(response_text)
-
-swanlab.log({"Prediction": test_text_list})
+# # 用测试集的前3条，主观看模型
+# test_df = pd.read_json(test_jsonl_new_path, lines=True)[:3]
+#
+# test_text_list = []
+#
+# for index, row in test_df.iterrows():
+#     instruction = row['instruction']
+#     input_value = row['input']
+#
+#     messages = [
+#         {"role": "system", "content": f"{instruction}"},
+#         {"role": "user", "content": f"{input_value}"}
+#     ]
+#
+#     response = predict(messages, model, tokenizer)
+#
+#     response_text = f"""
+#     Question: {input_value}
+#
+#     LLM:{response}
+#     """
+#
+#     test_text_list.append(swanlab.Text(response_text))
+#     print(response_text)
+#
+# swanlab.log({"Prediction": test_text_list})
