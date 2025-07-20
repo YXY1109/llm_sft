@@ -187,5 +187,3 @@ for index, row in test_df.iterrows():
     print(response_text)
 
 swanlab.log({"Prediction": test_text_list})
-
-swanlab.finish()

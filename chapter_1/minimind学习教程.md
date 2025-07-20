@@ -4,7 +4,7 @@
 
 ## 预训练和SFT微调，基于AutoDL
 
-## 拉取github代码
+## 拉取github代码1
 
 ```
 github设置：settings/Developer Settings/Personal access tokens/Fine-grained tokens
@@ -12,6 +12,16 @@ github设置：settings/Developer Settings/Personal access tokens/Fine-grained t
 服务器执行命令：
 git clone https://oauth2:{申请的token}@github.com/jingyaogong/minimind.git
 
+```
+
+## 拉取github代码2
+
+```
+github设置：settings/SSH and GPG keys/SSH key
+
+ssh-keygen -t rsa -b 4096 -C "123456@qq.com"
+cat ~/.ssh/id_rsa.pub
+git clone git@github.com:YXY1109/llm_sft.git
 ```
 
 ## 查看GPU
