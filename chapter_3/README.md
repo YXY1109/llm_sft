@@ -1,20 +1,12 @@
-# Qwen3微调实战：医疗R1推理风格聊天 
-
-[English](README_EN.md)
-
-[![](https://raw.githubusercontent.com/SwanHubX/assets/main/badge1.svg)](https://swanlab.cn/@ZeyiLin/qwen3-sft-medical/overview)
+# Qwen3微调实战：医疗R1推理风格聊天
 
 - **基础模型**：[Qwen3-1.7B](https://modelscope.cn/models/Qwen/Qwen3-1.7B/summary)
-- **微调后模型**：[Qwen3-1.7b-Medical-R1-sft](https://modelscope.cn/models/testUser/Qwen3-1.7b-Medical-R1-sft/summary)
 - **数据集**：[delicate_medical_r1_data](https://modelscope.cn/datasets/krisfu/delicate_medical_r1_data)
-- **SwanLab**：[qwen3-sft-medical](https://swanlab.cn/@ZeyiLin/qwen3-sft-medical/runs/agps0dkifth5l1xytcdyk/chart)
+- **SwanLab
+  **：[qwen3-sft-medical-all](https://swanlab.cn/@YXY1109/qwen3-sft-medical_all/runs/tfoeswcdth20v55yb0mtq/chart)
+- **SwanLab**：[qwen3-sft-medical-loar]()
 - **微调方式**：全参数微调、LoRA微调
 - **推理风格**：R1推理风格
-- **算力要求**：
-  - **全参数微调**：32GB显存
-  - **LoRA微调**：28GB显存
-- **图文教程**：[Qwen3大模型微调入门实战（完整代码）](https://zhuanlan.zhihu.com/p/1903848838214705484)
-- **Jupyter Notebook**：[train.ipynb](train.ipynb)
 
 > 如果需要进一步降低显存需求，可以使用Qwen3-0.6B模型，或调低`MAX_LENGTH`。
 
@@ -29,27 +21,34 @@ pip install -r requirements.txt
 会自动完成数据集下载、预处理、验证集划分，生成`train.jsonl`和`val.jsonl`文件。
 
 ```bash
-python data.py
+python 1_generate_data.py
+```
+
+## 下载模型
+
+```bash
+python 2_download_model.py
+```
+
+## 原始模型推理
+
+```bash
+python 3_inference.py
 ```
 
 ## 训练
 
 **全参数微调**
+
 ```bash
-python train.py
+python 4_train_all.py
 ```
 
 **LoRA微调**
+
 ```bash
-python train_lora.py
+python 5_train_lora.py
 ```
-
-**SwanLab训练日志**：[![](https://raw.githubusercontent.com/SwanHubX/assets/main/badge1.svg)](https://swanlab.cn/@ZeyiLin/qwen3-sft-medical/overview)
-
-两种微调方式对比，经测试全参数微调效果好于LoRA：
-
-![](./readme_images/charts.png)
-
 
 ## 训练效果预览
 
@@ -80,17 +79,17 @@ LLM:
 ## 推理
 
 **全参数微调**
+
+- 这个和3_inference.py一样，只是模型位置参数不同
+
 ```bash
-python inference.py
+python 6_inference_all.py
+
 ```
 
 **LoRA微调**
+
 ```bash
-python inference_lora.py
+python 6_inference_lora.py
 ```
 
-## 相关工具
-
-- [swanlab](https://github.com/SwanHubX/SwanLab)：开源、现代化设计的深度学习训练跟踪与可视化工具
-- [transformers](https://github.com/huggingface/transformers)：HuggingFace推出的包含预训练文本、计算机视觉、音频、视频和多模态模型的库，用于推理和训练
-- [peft](https://github.com/huggingface/peft)：用于高效微调大型语言模型的库
