@@ -205,3 +205,5 @@ __marimo__/
 .idea
 /chapter_3/models/
 /chapter_3/swanlog/
+/chapter_4/models/
+/chapter_4/models_lora/

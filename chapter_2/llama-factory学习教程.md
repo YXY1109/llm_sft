@@ -18,15 +18,17 @@ llamafactory-cli webui
 ## 数据来源
 
 > https://github.com/ConardLi/easy-dataset
+>
 > 数据文件：/Users/cj/PycharmProjects/LLM_SFT/chapter_2/data_files/easy-data
 
 ## 分析数据脚本大小的分布
+
+[LLaMA-Factory](https://github.com/hiyouga/LLaMA-Factory)
 
 ```
 用于设置max_length_tokens
 python .\scripts\stat_utils\length_cdf.py --help
 python .\scripts\stat_utils\length_cdf.py --model_name_or_path D:\PycharmProjects\LLaMA-Factory\saves\Qwen3-0.6B-Instruct\Qwen3-0.6B-Instruct-yxy --dataset identity --template qwen --interval 10
-    
 ```
 
 ## 模型上传huggingface

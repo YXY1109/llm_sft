@@ -4,5 +4,8 @@
   },
   "alpaca_zh_geli_2023": {
     "file_name": "geli_2023.json"
+  },
+   "alpaca_FinancialData": {
+    "file_name": "datasets-FinancialData-alpaca-2025-06-29.json"
   }
 }
