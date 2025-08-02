@@ -5,12 +5,10 @@ import sys
 from pathlib import Path
 
 import torch
-from peft import PeftModel
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 # ========== 用户只需改这里的 2 个路径 ==========
-BASE_MODEL_PATH = r"D:\PycharmProjects\llm_sft\chapter_4\models\Qwen\Qwen2.5-3B-Instruct"
-LORA_ADAPTER_PATH = r"D:\PycharmProjects\llm_sft\chapter_4\models_lora\train_2025-07-31-07-23-06"
+BASE_MODEL_PATH = r"D:\PycharmProjects\llm_sft\chapter_4\models_lora_merge"
 
 
 # ============================================
@@ -47,15 +45,13 @@ def load_model_and_tokenizer():
         tokenizer.pad_token = tokenizer.eos_token
 
     print("[INFO] 加载基座模型...")
-    base_model = AutoModelForCausalLM.from_pretrained(
+    model = AutoModelForCausalLM.from_pretrained(
         BASE_MODEL_PATH,
         torch_dtype=TORCH_DTYPE,
         device_map=DEVICE,
         trust_remote_code=True
     )
 
-    print("[INFO] 加载 LoRA adapter...")
-    model = PeftModel.from_pretrained(base_model, LORA_ADAPTER_PATH)
     model.eval()  # 关闭 dropout 等随机层
     return model, tokenizer
 
@@ -139,8 +135,6 @@ def main(argv=None):
     # 简单校验路径
     if not Path(BASE_MODEL_PATH).exists():
         sys.exit(f"[ERROR] 基座模型路径不存在：{BASE_MODEL_PATH}")
-    if not Path(LORA_ADAPTER_PATH).exists():
-        sys.exit(f"[ERROR] LoRA 路径不存在：{LORA_ADAPTER_PATH}")
 
     model, tokenizer = load_model_and_tokenizer()
 
@@ -160,24 +154,23 @@ def main(argv=None):
 
 if __name__ == "__main__":
     main()
-
     """
 【问题】快手电商搜索GMV同比提升了多少百分比
-【回答】快手电商搜索GMV同比提升了47%，这一增幅主要得益于直播电商业务的增长。在直播电商方面，快手电商通过优化用户体验和提升商品质量，推动了GMV的增长，从而实现了GMV同比增长25%。
+【回答】快手电商搜索GMV同比提升了46%。
 --------------------------------------------------
 
 【问题】京东集团第二季度物流分部的经营利润率创造了什么记录
-【回答】京东集团第二季度物流分部的经营利润率创造了历史新高，达到了23.6%。这一成绩得益于高效的运营效率和成本控制，使得物流分部不仅能够维持稳定的收入增长，还能在利润方面取得显著提升。
+【回答】京东集团第二季度物流分部的经营利润率达到了创纪录的19%，这一成绩主要得益于高效的运营和成本控制措施。此外，京东物流在本季度实现了连续四个季度的盈利，并且收入同比增长了38%。这些积极表现不仅增强了投资者的信心，也表明京东物流的商业模式得到了市场的认可。
 --------------------------------------------------
 
 【问题】介绍一下量子计算。
-【回答】量子计算是一种基于量子力学原理的计算模型，它利用量子位（qubits）来存储和处理信息。与传统计算机使用的二进制位不同，量子位可以同时处于0和1的状态，这种特性称为叠加态。此外，量子位之间还可以通过量子纠缠实现更强的信息传递方式。这些特性使得量子计算机能够在解决某些特定问题时比经典计算机更为高效。
-
-量子计算的研究领域包括量子算法开发、量子硬件设计以及量子纠错技术等。量子计算的目标是为那些无法用经典计算机有效求解的问题提供解决方案，例如大规模因式分解、优化问题和模拟量子系统等。尽管目前量子计算仍处在初级阶段，并且面临诸多挑战如噪声控制和可扩展性等问题，但其潜在的巨大潜力使其成为当今科技界研究的热点之一。
+【回答】量子计算是一种基于量子力学原理的计算方式，它利用量子比特（qubits）而非传统的二进制位（bits）来进行运算。量子比特具有叠加态和纠缠态等特性，使得量子计算机能够在处理某些特定问题时比传统计算机更高效。量子计算的研究旨在探索量子比特之间的相互作用，并设计出能够有效利用这些量子特性来加速计算过程的算法和硬件架构。
 --------------------------------------------------
 
 【问题】写一段 Python 快速排序代码。
-【回答】```python
+【回答】当然可以！以下是使用 Python 实现的快速排序算法：
+
+```python
 def quick_sort(arr):
     if len(arr) <= 1:
         return arr
@@ -187,28 +180,28 @@ def quick_sort(arr):
     right = [x for x in arr if x > pivot]
     return quick_sort(left) + middle + quick_sort(right)
 
-# 测试代码
-if __name__ == "__main__":
-    print(quick_sort([3,6,8,10,1,2,1]))
+# 测试数据
+test_array = [3, 6, 8, 10, 1, 2, 1]
+sorted_array = quick_sort(test_array)
+print(sorted_array)
 ```
 
-这段代码实现了快速排序算法，通过选择一个基准元素（pivot），将其余元素分成小于、等于和大于基准的三部分，并对这些部分进行递归地快速排序。最后将它们合并起来得到最终有序的数组。
+这段代码定义了一个 `quick_sort` 函数，该函数接受一个列表 `arr` 作为参数，并返回一个已排序的新列表。它首先检查输入列表的长度是否小于或等于 1，如果是，则直接返回该列表（因为长度为 0 或 1 的列表已经是有序的）。否则，选择列表中间的一个元素作为基准值 `pivot`，然后将列表分成三部分：小于 `pivot` 的元素、等于 `pivot` 的元素以及大于 `pivot` 的元素。最后，递归地对左半部分和右半部分进行排序，并将结果合并在一起。
 --------------------------------------------------
 
 【问题】把“Hello world”翻译成日语。
-【回答】“Hello world”翻译成日语是“こんにちは、世界”。
+【回答】"Hello world" 翻译成日语是 "こんにちは、世界" (Konnichiwa, sekai)。
 --------------------------------------------------
 
 【问题】如何评价《三体》这部小说？
-【回答】《三体》是一部由刘慈欣所著的科幻小说，首次出版于2008年。该书荣获了第73届雨果奖最佳长篇故事奖，并被翻译成多国语言，受到全球读者的喜爱。它以独特的视角和丰富的想象力展现了人类与外星文明之间的冲突与合作，引发了人们对宇宙、生命以及未来科技的深刻思考。
+【回答】《三体》是中国科幻作家刘慈欣创作的一部长篇科幻小说，于2008年首次发表在《科幻世界》杂志上。该书获得了第73届雨果奖最佳长篇故事奖，成为中国乃至亚洲获得这一奖项的第一部作品。这部小说以其宏大的叙事、深刻的哲学思考和独特的世界观而著称，展现了人类与外星文明之间的接触与冲突，以及人类社会的复杂性和多样性。
 --------------------------------------------------
 
 【问题】美团的即时配送订单数达到了多少
-【回答】美团的即时配送订单数达到了5亿单。
+【回答】美团的即时配送订单数在2023年第二季度达到了24亿单。
 --------------------------------------------------
 
 【问题】你是谁
-【回答】我是杨天霸，一个由白沙科技公司开发的人工智能助手。我旨在通过对话方式回答用户的问题、提供解答以及进行各种互动。
+【回答】您好，我是杨天霸，一个由白沙科技公司开发的人工智能助手。我可以回答问题、提供信息并执行各种任务。
 --------------------------------------------------
-
     """
