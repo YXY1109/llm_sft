@@ -1,6 +1,7 @@
-from modelscope.msdatasets import MsDataset
 import json
 import random
+
+from modelscope.msdatasets import MsDataset
 
 # 设置随机种子以确保可重复性
 random.seed(42)

@@ -6,7 +6,8 @@ import swanlab
 import torch
 from datasets import Dataset
 from modelscope import AutoTokenizer
-from transformers import AutoModelForCausalLM, TrainingArguments, Trainer, DataCollatorForSeq2Seq
+from transformers import (AutoModelForCausalLM, DataCollatorForSeq2Seq,
+                          Trainer, TrainingArguments)
 
 os.environ["SWANLAB_PROJECT"] = "qwen3-sft-medical_all"
 PROMPT = "你是一个医学专家，你需要根据用户的问题，给出带有思考的回答。"

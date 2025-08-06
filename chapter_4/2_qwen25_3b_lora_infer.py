@@ -6,7 +6,7 @@ from pathlib import Path
 
 import torch
 from peft import PeftModel
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # ========== 用户只需改这里的 2 个路径 ==========
 BASE_MODEL_PATH = r"D:\PycharmProjects\llm_sft\chapter_4\models\Qwen\Qwen2.5-3B-Instruct"

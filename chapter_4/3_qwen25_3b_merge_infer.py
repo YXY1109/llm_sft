@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # ========== 用户只需改这里的 2 个路径 ==========
 BASE_MODEL_PATH = r"D:\PycharmProjects\llm_sft\chapter_4\models_lora_merge"

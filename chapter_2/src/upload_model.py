@@ -1,4 +1,4 @@
-from huggingface_hub import login, HfApi
+from huggingface_hub import HfApi, login
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 """
