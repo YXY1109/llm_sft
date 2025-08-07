@@ -1,13 +1,17 @@
 import logging
+import os
 import sys
 
 import swanlab
 import torch
 from datasets import load_dataset
+from dotenv import load_dotenv
 from swanlab.integration.transformers import SwanLabCallback
 from transformers import TrainingArguments
 from trl import SFTTrainer
 from unsloth import FastLanguageModel, is_bfloat16_supported
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 log_level = logging.INFO
@@ -26,6 +30,7 @@ logging.basicConfig(
 )
 
 logger.info("===========Login SwanLab====================")
+api_key = os.getenv("SWANLAB_KEY")
 swanlab.login(api_key="YOUR_SWANLAB_KEY")
 
 max_seq_length = 8192
