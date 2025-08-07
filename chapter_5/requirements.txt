@@ -3,3 +3,4 @@ datasets==3.6.0
 trl==0.13.0
 swanlab==0.6.7
 modelscope==1.28.0
+unsloth==2025.8.1
