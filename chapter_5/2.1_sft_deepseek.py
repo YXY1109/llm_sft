@@ -120,12 +120,13 @@ if __name__ == '__main__':
         loftq_config=None,
     )
 
+    dataset_kwargs = {"text_field_name": "text"}
     trainer = SFTTrainer(
         model=model,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         train_dataset=train_dataset,
         eval_dataset=test_dataset,
-        dataset_text_field="text",
+        dataset_kwargs=dataset_kwargs,
         max_seq_length=max_seq_length,
         dataset_num_proc=4,
         args=TrainingArguments(
