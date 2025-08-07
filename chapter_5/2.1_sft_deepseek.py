@@ -35,7 +35,7 @@ load_in_4bit = False
 logger.info("===========Loading the model and tokenizer=====================")
 
 model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name="/model/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+    model_name="./models/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
     max_seq_length=max_seq_length,
     dtype=dtype,
     load_in_4bit=load_in_4bit,

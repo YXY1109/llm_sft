@@ -1,6 +1,5 @@
-unsloth
 transformers==4.53.2
 datasets==3.6.0
-trl
+trl==0.13.0
 swanlab==0.6.7
 modelscope==1.28.0
