@@ -45,8 +45,8 @@ logger.info(prompt_style.format(question, ""))
 logger.info("===========Loading the model and tokenizer=====================")
 try:
     model, tokenizer = FastLanguageModel.from_pretrained(
-        model_name="./Deepseek-R1-Medical-CoT",
-        # model_name = "/model/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+        # model_name="./Deepseek-R1-Medical-CoT",  # 微调模型
+        model_name="./models/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",  # 原始模型
         max_seq_length=max_seq_length,
         dtype=dtype,
         load_in_4bit=load_in_4bit,

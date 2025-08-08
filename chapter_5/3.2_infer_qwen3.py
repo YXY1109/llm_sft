@@ -43,8 +43,8 @@ logger.info(prompt_style.format(question, ""))
 logger.info("===========Loading the model and tokenizer=====================")
 
 model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name="./QWen3-8B-Medical-CoT",
-    # model_name = "/model/Qwen/Qwen3-8B",
+    # model_name="./QWen3-8B-Medical-CoT",
+    model_name="./models/Qwen/Qwen3-8B",
     max_seq_length=max_seq_length,
     dtype=dtype,
     load_in_4bit=load_in_4bit,
