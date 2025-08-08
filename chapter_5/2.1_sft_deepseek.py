@@ -15,7 +15,8 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 log_level = logging.INFO
 
-swanlab_callback = SwanLabCallback(project="DeepSeek-R1-Distill-Qwen-7B")
+swanlab_callback = SwanLabCallback(project="DeepSeek-R1-Distill-Qwen-7B-1", workspace="DeepSeek-R1-Distill-Qwen-7B-2",
+                                   experiment_name="DeepSeek-R1-Distill-Qwen-7B-3")
 
 # Setup logging
 logging.basicConfig(
@@ -32,9 +33,9 @@ logger.info("===========Login SwanLab====================")
 api_key = os.getenv("SWANLAB_KEY")
 swanlab.login(api_key=api_key)
 
-max_seq_length = 8192
-dtype = torch.bfloat16
-load_in_4bit = False
+max_seq_length = 4096
+dtype = torch.float16
+load_in_4bit = True
 
 logger.info("===========Loading the model and tokenizer=====================")
 
@@ -43,7 +44,7 @@ model, tokenizer = FastLanguageModel.from_pretrained(
     max_seq_length=max_seq_length,
     dtype=dtype,
     load_in_4bit=load_in_4bit,
-    gpu_memory_utilization=0.95
+    gpu_memory_utilization=0.9
 )
 
 EOS_TOKEN = tokenizer.eos_token  # Must add EOS_TOKEN
@@ -56,6 +57,11 @@ def formatting_prompts_func(examples):
     texts = []
     for input, cot, output in zip(inputs, cots, outputs):
         text = train_prompt_style.format(input, cot, output) + EOS_TOKEN
+        # 截断超长文本（避免单样本占用过多显存）
+        if len(tokenizer(text)["input_ids"]) > max_seq_length:
+            # 截断到max_seq_length-1（留一个位置给EOS）
+            text_ids = tokenizer(text, truncation=True, max_length=max_seq_length)["input_ids"]
+            text = tokenizer.decode(text_ids, skip_special_tokens=False)
         texts.append(text)
     return {
         "text": texts,
@@ -100,7 +106,7 @@ if __name__ == '__main__':
 
     model = FastLanguageModel.get_peft_model(
         model,
-        r=16,
+        r=8,
         target_modules=[
             "q_proj",
             "k_proj",
@@ -128,14 +134,14 @@ if __name__ == '__main__':
             dataset_text_field="text",  # 在这里指定文本字段
             max_seq_length=max_seq_length,
             dataset_num_proc=4,
-            per_device_train_batch_size=16,
-            gradient_accumulation_steps=2,
-            per_device_eval_batch_size=4,
+            per_device_train_batch_size=4,
+            gradient_accumulation_steps=8,
+            per_device_eval_batch_size=2,
             # Use num_train_epochs = 1, warmup_ratio for full training runs!
             warmup_steps=50,
             max_steps=600,
             learning_rate=2e-4,
-            fp16=not is_bfloat16_supported(),
+            fp16=not is_bfloat16_supported(),  # 3090 不支持 bfloat16
             bf16=is_bfloat16_supported(),
             logging_steps=10,
             optim="adamw_8bit",
