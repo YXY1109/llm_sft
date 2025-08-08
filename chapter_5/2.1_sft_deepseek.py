@@ -33,6 +33,8 @@ logger.info("===========Login SwanLab====================")
 api_key = os.getenv("SWANLAB_KEY")
 swanlab.login(api_key=api_key)
 
+print(f"is_bfloat16_supported: {is_bfloat16_supported()}")
+
 max_seq_length = 4096
 dtype = torch.float16
 load_in_4bit = True
@@ -141,8 +143,8 @@ if __name__ == '__main__':
             warmup_steps=50,
             max_steps=600,
             learning_rate=2e-4,
-            fp16=not is_bfloat16_supported(),  # 3090 不支持 bfloat16
-            bf16=is_bfloat16_supported(),
+            fp16=True,  # 3090 不支持 bfloat16
+            bf16=False,
             logging_steps=10,
             optim="adamw_8bit",
             weight_decay=0.01,
