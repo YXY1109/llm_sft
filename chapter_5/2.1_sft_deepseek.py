@@ -7,7 +7,6 @@ import torch
 from datasets import load_dataset
 from dotenv import load_dotenv
 from swanlab.integration.transformers import SwanLabCallback
-from transformers import TrainingArguments
 from trl import SFTTrainer, SFTConfig
 from unsloth import FastLanguageModel, is_bfloat16_supported
 
@@ -120,19 +119,15 @@ if __name__ == '__main__':
         loftq_config=None,
     )
 
-    sft_config = SFTConfig(
-        dataset_text_field="text",  # 在这里指定文本字段
-        max_seq_length=max_seq_length,
-        dataset_num_proc=4,
-    )
-
     trainer = SFTTrainer(
         model=model,
         processing_class=tokenizer,
         train_dataset=train_dataset,
         eval_dataset=test_dataset,
-        sft_config=sft_config,  # 传入SFT配置
-        args=TrainingArguments(
+        args=SFTConfig(
+            dataset_text_field="text",  # 在这里指定文本字段
+            max_seq_length=max_seq_length,
+            dataset_num_proc=4,
             per_device_train_batch_size=16,
             gradient_accumulation_steps=2,
             per_device_eval_batch_size=4,
@@ -156,17 +151,17 @@ if __name__ == '__main__':
         callbacks=[swanlab_callback],
     )
 
-logger.info("==============Model training====================")
+    logger.info("==============Model training====================")
 
-trainer_stats = trainer.train()
-try:
-    logger.info("==============Save  model====================")
-    MODEL_NAME = 'Deepseek-R1-Medical-CoT'
-    # model.save_pretrained(MODEL_NAME) 
-    logger.info("==============2====================")
-    # tokenizer.save_pretrained(MODEL_NAME)
-    logger.info("==============3====================")
-    model.save_pretrained_merged(MODEL_NAME, tokenizer, save_method="merged_16bit")
-    logger.info("==============4====================")
-except Exception as e:
-    logger.info(e)
+    trainer_stats = trainer.train()
+    try:
+        logger.info("==============Save  model====================")
+        MODEL_NAME = 'Deepseek-R1-Medical-CoT'
+        # model.save_pretrained(MODEL_NAME)
+        logger.info("==============2====================")
+        # tokenizer.save_pretrained(MODEL_NAME)
+        logger.info("==============3====================")
+        model.save_pretrained_merged(MODEL_NAME, tokenizer, save_method="merged_16bit")
+        logger.info("==============4====================")
+    except Exception as e:
+        logger.info(e)
