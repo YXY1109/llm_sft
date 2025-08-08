@@ -8,7 +8,7 @@ from datasets import load_dataset
 from dotenv import load_dotenv
 from swanlab.integration.transformers import SwanLabCallback
 from transformers import TrainingArguments
-from trl import SFTTrainer
+from trl import SFTTrainer, SFTConfig
 from unsloth import FastLanguageModel, is_bfloat16_supported
 
 load_dotenv()
@@ -120,15 +120,18 @@ if __name__ == '__main__':
         loftq_config=None,
     )
 
-    dataset_kwargs = {"text_field_name": "text"}
+    sft_config = SFTConfig(
+        dataset_text_field="text",  # 在这里指定文本字段
+        max_seq_length=max_seq_length,
+        dataset_num_proc=4,
+    )
+
     trainer = SFTTrainer(
         model=model,
         processing_class=tokenizer,
         train_dataset=train_dataset,
         eval_dataset=test_dataset,
-        dataset_kwargs=dataset_kwargs,
-        max_seq_length=max_seq_length,
-        dataset_num_proc=4,
+        sft_config=sft_config,  # 传入SFT配置
         args=TrainingArguments(
             per_device_train_batch_size=16,
             gradient_accumulation_steps=2,
