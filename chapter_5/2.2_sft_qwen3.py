@@ -33,7 +33,7 @@ api_key = os.getenv("SWANLAB_KEY")
 swanlab.login(api_key=api_key)
 
 max_seq_length = 4096
-dtype = torch.float16
+dtype = torch.bfloat16
 load_in_4bit = True
 
 logger.info("===========Loading the model and tokenizer=====================")
