@@ -10,9 +10,3 @@
 - 下载模型：python 1_download_model.py
 - 微调模型：python 2.*.py
 - 推理原始和微调后模型：python 3.*.py
-
-## 安装unsloth
-
-```bash
-pip install "unsloth[cu124-torch251] @ git+https://github.com/unslothai/unsloth.git"
-```
