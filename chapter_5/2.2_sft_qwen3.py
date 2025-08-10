@@ -7,7 +7,7 @@ import torch
 from datasets import load_dataset
 from dotenv import load_dotenv
 from swanlab.integration.transformers import SwanLabCallback
-from trl import SFTTrainer, SFTConfig
+from trl import SFTConfig, SFTTrainer
 from unsloth import FastLanguageModel, is_bfloat16_supported
 
 load_dotenv()
