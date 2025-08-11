@@ -39,7 +39,13 @@ def load_environment_variables():
 
 
 def upload_to_huggingface(model_path, repo_name, token):
-    """将模型上传到Hugging Face Hub"""
+    """
+    将模型上传到Hugging Face Hub。在autodl上网络不同，所以失败
+    :param model_path: 模型的目录
+    :param repo_name: 仓库名称
+    :param token:
+    :return:
+    """
     try:
         print(f"开始上传模型到Hugging Face仓库: {repo_name}")
         api = HfApi()
