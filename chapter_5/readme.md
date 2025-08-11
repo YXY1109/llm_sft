@@ -10,3 +10,8 @@
 - 下载模型：python 1_download_model.py
 - 微调模型：python 2.*.py
 - 推理原始和微调后模型：python 3.*.py
+
+## Swanlab
+
+- [qwen3-8b微调结果](https://swanlab.cn/@YXY1109/chapter_5/runs/n17u1fsglugt1s0ba2lq8/chart)
+- [deepseek微调结果](https://swanlab.cn/@YXY1109/chapter_5/runs/p6zgm0ljxdevk91kbohob/chart)
