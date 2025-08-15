@@ -28,3 +28,7 @@
 - 微调模型：Qwen3-8B和DeepSeek-R1-Distill-Qwen-7B
 - 微调数据：[medical-o1-reasoning-SFT](https://modelscope.cn/datasets/AI-ModelScope/medical-o1-reasoning-SFT)
 - 微调框架：Unsloth
+
+## chapter_6
+
+- 使用[evalscope](https://github.com/modelscope/evalscope)评估模型
