@@ -1,6 +1,6 @@
 # 医疗数据集
 
-## ModelScope
+## 一，ModelScope
 
 ### 精致的医疗r1数据
 
@@ -51,3 +51,7 @@
 - [数据路径](https://modelscope.cn/datasets/alexhuangguo/chinese-medical/files)
 - 使用文件：medicalQA.json
 
+## 二，数据清洗
+
+- 将以上数据集进行合并，生成json文件
+- json文件，进行字符去重，语义去重，语义关联性判断，长度检查，LLM质量评估

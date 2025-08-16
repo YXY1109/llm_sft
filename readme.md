@@ -44,3 +44,7 @@
 评估模型，使用evalscope
 
 - 使用[evalscope](https://github.com/modelscope/evalscope)评估模型
+
+## chapter_7
+
+收集医疗数据集，清洗数据
