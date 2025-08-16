@@ -1,0 +1,34 @@
+{
+    "name": "qwen3-8b-lora@general_qa",
+    "dataset_name": "general_qa",
+    "dataset_pretty_name": "General-QA",
+    "dataset_description": "A general question answering dataset for custom evaluation. For detailed instructions on how to use this benchmark, please refer to the [User Guide](https://evalscope.readthedocs.io/zh-cn/latest/advanced_guides/custom_dataset/llm.html#qa).",
+    "model_name": "qwen3-8b-lora",
+    "score": 0.82,
+    "metrics": [
+        {
+            "name": "AverageAccuracy",
+            "num": 100,
+            "score": 0.82,
+            "macro_score": 0.82,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 100,
+                    "score": 0.82,
+                    "macro_score": 0.82,
+                    "subsets": [
+                        {
+                            "name": "r1_data_example_100",
+                            "score": 0.82,
+                            "num": 100
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "analysis": "N/A"
+}

@@ -1,0 +1,64 @@
+analysis_report: false
+api_key: none
+api_url: http://127.0.0.1:8881/v1
+chat_template: null
+dataset_args:
+  general_qa:
+    dataset_id: D:\PycharmProjects\llm_sft\chapter_6\json_data
+    description: A general question answering dataset for custom evaluation. For detailed
+      instructions on how to use this benchmark, please refer to the [User Guide](https://evalscope.readthedocs.io/zh-cn/latest/advanced_guides/custom_dataset/llm.html#qa).
+    eval_split: test
+    extra_params: {}
+    few_shot_num: 0
+    few_shot_random: false
+    filters: null
+    metric_list:
+    - AverageBLEU
+    - AverageRouge
+    model_adapter: generation
+    name: general_qa
+    output_types:
+    - generation
+    pretty_name: General-QA
+    prompt_template: '«Îªÿ¥Œ Ã‚
+
+      {query}'
+    query_template: null
+    subset_list:
+    - r1_data_example_100
+    system_prompt: null
+    tags:
+    - QA
+    - Custom
+    train_split: null
+dataset_dir: C:\Users\YXY1109\.cache\modelscope\hub\datasets
+dataset_hub: modelscope
+datasets:
+- general_qa
+debug: false
+dry_run: false
+eval_backend: Native
+eval_batch_size: 8
+eval_config: null
+eval_type: service
+generation_config:
+  max_tokens: 2048
+  temperature: 0.0
+ignore_errors: false
+judge_model_args: {}
+judge_strategy: auto
+judge_worker_num: 1
+limit: null
+mem_cache: false
+model: qwen3-8b
+model_args: {}
+model_id: qwen3-8b
+model_task: text_generation
+outputs: null
+seed: 42
+stage: all
+stream: false
+template_type: null
+timeout: null
+use_cache: null
+work_dir: ./outputs\20250816_092919

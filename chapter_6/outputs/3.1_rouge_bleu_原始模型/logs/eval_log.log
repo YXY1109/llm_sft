@@ -1,0 +1,145 @@
+2025-08-16 09:29:21,181 - evalscope - WARNING - Output type generation is not supported for service evaluation. Using server model adapter instead.
+2025-08-16 09:29:22,991 - evalscope - INFO - Dump task config to ./outputs\20250816_092919\configs\task_config_a9ab2d.yaml
+2025-08-16 09:29:22,998 - evalscope - INFO - {
+    "model": "qwen3-8b",
+    "model_id": "qwen3-8b",
+    "model_args": {},
+    "model_task": "text_generation",
+    "template_type": null,
+    "chat_template": null,
+    "datasets": [
+        "general_qa"
+    ],
+    "dataset_args": {
+        "general_qa": {
+            "name": "general_qa",
+            "dataset_id": "D:\\PycharmProjects\\llm_sft\\chapter_6\\json_data",
+            "model_adapter": "generation",
+            "output_types": [
+                "generation"
+            ],
+            "subset_list": [
+                "r1_data_example_100"
+            ],
+            "metric_list": [
+                "AverageBLEU",
+                "AverageRouge"
+            ],
+            "few_shot_num": 0,
+            "few_shot_random": false,
+            "train_split": null,
+            "eval_split": "test",
+            "prompt_template": "Çë»Ø´ðÎÊÌâ\n{query}",
+            "system_prompt": null,
+            "query_template": null,
+            "pretty_name": "General-QA",
+            "description": "A general question answering dataset for custom evaluation. For detailed instructions on how to use this benchmark, please refer to the [User Guide](https://evalscope.readthedocs.io/zh-cn/latest/advanced_guides/custom_dataset/llm.html#qa).",
+            "tags": [
+                "QA",
+                "Custom"
+            ],
+            "filters": null,
+            "extra_params": {}
+        }
+    },
+    "dataset_dir": "C:\\Users\\YXY1109\\.cache\\modelscope\\hub\\datasets",
+    "dataset_hub": "modelscope",
+    "generation_config": {
+        "max_tokens": 2048,
+        "temperature": 0.0
+    },
+    "eval_type": "service",
+    "eval_backend": "Native",
+    "eval_config": null,
+    "stage": "all",
+    "limit": null,
+    "eval_batch_size": 8,
+    "mem_cache": false,
+    "use_cache": null,
+    "work_dir": "./outputs\\20250816_092919",
+    "outputs": null,
+    "ignore_errors": false,
+    "debug": false,
+    "dry_run": false,
+    "seed": 42,
+    "api_url": "http://127.0.0.1:8881/v1",
+    "api_key": "none",
+    "timeout": null,
+    "stream": false,
+    "judge_strategy": "auto",
+    "judge_worker_num": 1,
+    "judge_model_args": {},
+    "analysis_report": false
+}
+2025-08-16 09:29:22,999 - evalscope - INFO - Start evaluating on dataset D:\PycharmProjects\llm_sft\chapter_6\json_data
+2025-08-16 09:29:23,001 - evalscope - INFO - Use settings: > few_shot_num: 0, > few_shot_split: None, > target_eval_split: test
+2025-08-16 09:35:28,911 - evalscope - INFO - Dump predictions to ./outputs\20250816_092919\predictions\qwen3-8b\general_qa_r1_data_example_100.jsonl.
+2025-08-16 09:35:52,551 - evalscope - INFO - 
+D:\PycharmProjects\llm_sft\chapter_6\json_data report table:
++----------+------------+-----------+---------------------+-------+---------+---------+
+| Model    | Dataset    | Metric    | Subset              |   Num |   Score | Cat.0   |
++==========+============+===========+=====================+=======+=========+=========+
+| qwen3-8b | general_qa | Rouge-1-R | r1_data_example_100 |   100 |  0.6312 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | Rouge-1-P | r1_data_example_100 |   100 |  0.1625 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | Rouge-1-F | r1_data_example_100 |   100 |  0.2563 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | Rouge-2-R | r1_data_example_100 |   100 |  0.2532 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | Rouge-2-P | r1_data_example_100 |   100 |  0.0405 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | Rouge-2-F | r1_data_example_100 |   100 |  0.0693 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | Rouge-L-R | r1_data_example_100 |   100 |  0.4529 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | Rouge-L-P | r1_data_example_100 |   100 |  0.0493 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | Rouge-L-F | r1_data_example_100 |   100 |  0.0883 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | bleu-1    | r1_data_example_100 |   100 |  0.0703 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | bleu-2    | r1_data_example_100 |   100 |  0.0256 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | bleu-3    | r1_data_example_100 |   100 |  0.0096 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | bleu-4    | r1_data_example_100 |   100 |  0.0041 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+ 
+
+2025-08-16 09:35:52,551 - evalscope - INFO - Skipping report analysis (`analysis_report=False`).
+2025-08-16 09:35:52,554 - evalscope - INFO - Dump report to: ./outputs\20250816_092919\reports\qwen3-8b\general_qa.json 
+
+2025-08-16 09:35:52,554 - evalscope - INFO - Evaluation finished on D:\PycharmProjects\llm_sft\chapter_6\json_data
+2025-08-16 09:35:52,559 - evalscope - INFO - Overall report table: 
++----------+------------+-----------+---------------------+-------+---------+---------+
+| Model    | Dataset    | Metric    | Subset              |   Num |   Score | Cat.0   |
++==========+============+===========+=====================+=======+=========+=========+
+| qwen3-8b | general_qa | Rouge-1-R | r1_data_example_100 |   100 |  0.6312 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | Rouge-1-P | r1_data_example_100 |   100 |  0.1625 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | Rouge-1-F | r1_data_example_100 |   100 |  0.2563 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | Rouge-2-R | r1_data_example_100 |   100 |  0.2532 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | Rouge-2-P | r1_data_example_100 |   100 |  0.0405 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | Rouge-2-F | r1_data_example_100 |   100 |  0.0693 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | Rouge-L-R | r1_data_example_100 |   100 |  0.4529 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | Rouge-L-P | r1_data_example_100 |   100 |  0.0493 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | Rouge-L-F | r1_data_example_100 |   100 |  0.0883 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | bleu-1    | r1_data_example_100 |   100 |  0.0703 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | bleu-2    | r1_data_example_100 |   100 |  0.0256 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | bleu-3    | r1_data_example_100 |   100 |  0.0096 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+
+| qwen3-8b | general_qa | bleu-4    | r1_data_example_100 |   100 |  0.0041 | default |
++----------+------------+-----------+---------------------+-------+---------+---------+ 
+
+2025-08-16 09:35:52,559 - evalscope - INFO - Finished evaluation for qwen3-8b on ['general_qa']
+2025-08-16 09:35:52,559 - evalscope - INFO - Output directory: ./outputs\20250816_092919

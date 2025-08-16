@@ -1,0 +1,167 @@
+2025-08-14 23:10:56,796 - evalscope - INFO - Loading model Qwen/Qwen2.5-0.5B-Instruct ...
+2025-08-14 23:11:11,717 - evalscope - INFO - Updating generation config ...
+2025-08-14 23:11:14,317 - evalscope - INFO - Updating generation config ...
+2025-08-14 23:11:15,144 - evalscope - INFO - Dump task config to ./outputs\20250814_231047\configs\task_config_fda0dc.yaml
+2025-08-14 23:11:15,153 - evalscope - INFO - {
+    "model": "Qwen/Qwen2.5-0.5B-Instruct",
+    "model_id": "Qwen2.5-0.5B-Instruct",
+    "model_args": {
+        "revision": "master",
+        "precision": "torch.float16"
+    },
+    "model_task": "text_generation",
+    "template_type": null,
+    "chat_template": null,
+    "datasets": [
+        "gsm8k",
+        "arc"
+    ],
+    "dataset_args": {
+        "gsm8k": {
+            "name": "gsm8k",
+            "dataset_id": "modelscope/gsm8k",
+            "model_adapter": "generation",
+            "output_types": [
+                "generation"
+            ],
+            "subset_list": [
+                "main"
+            ],
+            "metric_list": [
+                "AverageAccuracy"
+            ],
+            "few_shot_num": 4,
+            "few_shot_random": false,
+            "train_split": null,
+            "eval_split": "test",
+            "prompt_template": "Question: {query}\nLet's think step by step\nAnswer:",
+            "system_prompt": null,
+            "query_template": null,
+            "pretty_name": "GSM8K",
+            "description": "GSM8K (Grade School Math 8K) is a dataset of grade school math problems, designed to evaluate the mathematical reasoning abilities of AI models.",
+            "tags": [
+                "Mathematics"
+            ],
+            "filters": null,
+            "extra_params": {}
+        },
+        "arc": {
+            "name": "arc",
+            "dataset_id": "modelscope/ai2_arc",
+            "model_adapter": "generation",
+            "output_types": [
+                "multiple_choice_logits",
+                "generation"
+            ],
+            "subset_list": [
+                "ARC-Easy",
+                "ARC-Challenge"
+            ],
+            "metric_list": [
+                "AverageAccuracy"
+            ],
+            "few_shot_num": 0,
+            "few_shot_random": false,
+            "train_split": "train",
+            "eval_split": "test",
+            "prompt_template": "Given the following question and four candidate answers (A, B, C and D), choose the best answer.\n{query}\nYour response should end with \"The best answer is [the_answer_letter]\" where the [the_answer_letter] is one of A, B, C or D.",
+            "system_prompt": null,
+            "query_template": null,
+            "pretty_name": "ARC",
+            "description": "The ARC (AI2 Reasoning Challenge) benchmark is designed to evaluate the reasoning capabilities of AI models through multiple-choice questions derived from science exams. It includes two subsets: ARC-Easy and ARC-Challenge, which vary in difficulty.",
+            "tags": [
+                "Reasoning",
+                "MCQ"
+            ],
+            "filters": null,
+            "extra_params": {}
+        }
+    },
+    "dataset_dir": "C:\\Users\\YXY1109\\.cache\\modelscope\\hub\\datasets",
+    "dataset_hub": "modelscope",
+    "generation_config": {
+        "max_length": 2048,
+        "max_new_tokens": 512,
+        "do_sample": false,
+        "top_k": 50,
+        "top_p": 1.0,
+        "temperature": 1.0
+    },
+    "eval_type": "checkpoint",
+    "eval_backend": "Native",
+    "eval_config": null,
+    "stage": "all",
+    "limit": 50,
+    "eval_batch_size": 1,
+    "mem_cache": false,
+    "use_cache": null,
+    "work_dir": "./outputs\\20250814_231047",
+    "outputs": null,
+    "ignore_errors": false,
+    "debug": false,
+    "dry_run": false,
+    "seed": 42,
+    "api_url": null,
+    "api_key": "EMPTY",
+    "timeout": null,
+    "stream": false,
+    "judge_strategy": "auto",
+    "judge_worker_num": 1,
+    "judge_model_args": {},
+    "analysis_report": false
+}
+2025-08-14 23:11:15,154 - evalscope - INFO - Start evaluating on dataset modelscope/gsm8k
+2025-08-14 23:11:15,155 - evalscope - INFO - Loading dataset from hub: modelscope/gsm8k
+2025-08-14 23:11:15,684 - evalscope - INFO - Loading dataset: dataset_name: modelscope/gsm8k > subsets: ['main']
+2025-08-14 23:11:29,128 - evalscope - INFO - Use settings: > few_shot_num: 4, > few_shot_split: None, > target_eval_split: test
+2025-08-14 23:26:09,971 - evalscope - INFO - Dump predictions to ./outputs\20250814_231047\predictions\Qwen2.5-0.5B-Instruct\gsm8k_main.jsonl.
+2025-08-14 23:26:09,979 - evalscope - WARNING - ##report##Cannot compare two numbers: gold_ans=57500, pred_ans=0800
+2025-08-14 23:26:10,019 - evalscope - INFO - 
+modelscope/gsm8k report table:
++-----------------------+-----------+-----------------+----------+-------+---------+---------+
+| Model                 | Dataset   | Metric          | Subset   |   Num |   Score | Cat.0   |
++=======================+===========+=================+==========+=======+=========+=========+
+| Qwen2.5-0.5B-Instruct | gsm8k     | AverageAccuracy | main     |    50 |    0.42 | default |
++-----------------------+-----------+-----------------+----------+-------+---------+---------+ 
+
+2025-08-14 23:26:10,019 - evalscope - INFO - Skipping report analysis (`analysis_report=False`).
+2025-08-14 23:26:10,020 - evalscope - INFO - Dump report to: ./outputs\20250814_231047\reports\Qwen2.5-0.5B-Instruct\gsm8k.json 
+
+2025-08-14 23:26:10,020 - evalscope - INFO - Evaluation finished on modelscope/gsm8k
+2025-08-14 23:26:10,021 - evalscope - INFO - Start evaluating on dataset modelscope/ai2_arc
+2025-08-14 23:26:10,021 - evalscope - INFO - Loading dataset from hub: modelscope/ai2_arc
+2025-08-14 23:26:10,021 - evalscope - INFO - Loading dataset: dataset_name: modelscope/ai2_arc > subsets: ['ARC-Easy', 'ARC-Challenge']
+2025-08-14 23:27:01,681 - evalscope - INFO - Use settings: > few_shot_num: 0, > few_shot_split: train, > target_eval_split: test
+2025-08-14 23:33:40,484 - evalscope - INFO - Dump predictions to ./outputs\20250814_231047\predictions\Qwen2.5-0.5B-Instruct\arc_ARC-Easy.jsonl.
+2025-08-14 23:41:17,268 - evalscope - INFO - Dump predictions to ./outputs\20250814_231047\predictions\Qwen2.5-0.5B-Instruct\arc_ARC-Challenge.jsonl.
+2025-08-14 23:41:17,307 - evalscope - INFO - 
+modelscope/ai2_arc report table:
++-----------------------+-----------+-----------------+---------------+-------+---------+---------+
+| Model                 | Dataset   | Metric          | Subset        |   Num |   Score | Cat.0   |
++=======================+===========+=================+===============+=======+=========+=========+
+| Qwen2.5-0.5B-Instruct | arc       | AverageAccuracy | ARC-Easy      |    50 |    0.68 | default |
++-----------------------+-----------+-----------------+---------------+-------+---------+---------+
+| Qwen2.5-0.5B-Instruct | arc       | AverageAccuracy | ARC-Challenge |    50 |    0.38 | default |
++-----------------------+-----------+-----------------+---------------+-------+---------+---------+
+| Qwen2.5-0.5B-Instruct | arc       | AverageAccuracy | OVERALL       |   100 |    0.53 | -       |
++-----------------------+-----------+-----------------+---------------+-------+---------+---------+ 
+
+2025-08-14 23:41:17,307 - evalscope - INFO - Skipping report analysis (`analysis_report=False`).
+2025-08-14 23:41:17,309 - evalscope - INFO - Dump report to: ./outputs\20250814_231047\reports\Qwen2.5-0.5B-Instruct\arc.json 
+
+2025-08-14 23:41:17,309 - evalscope - INFO - Evaluation finished on modelscope/ai2_arc
+2025-08-14 23:41:17,314 - evalscope - INFO - Overall report table: 
++-----------------------+-----------+-----------------+---------------+-------+---------+---------+
+| Model                 | Dataset   | Metric          | Subset        |   Num |   Score | Cat.0   |
++=======================+===========+=================+===============+=======+=========+=========+
+| Qwen2.5-0.5B-Instruct | arc       | AverageAccuracy | ARC-Easy      |    50 |    0.68 | default |
++-----------------------+-----------+-----------------+---------------+-------+---------+---------+
+| Qwen2.5-0.5B-Instruct | arc       | AverageAccuracy | ARC-Challenge |    50 |    0.38 | default |
++-----------------------+-----------+-----------------+---------------+-------+---------+---------+
+| Qwen2.5-0.5B-Instruct | arc       | AverageAccuracy | OVERALL       |   100 |    0.53 | -       |
++-----------------------+-----------+-----------------+---------------+-------+---------+---------+
+| Qwen2.5-0.5B-Instruct | gsm8k     | AverageAccuracy | main          |    50 |    0.42 | default |
++-----------------------+-----------+-----------------+---------------+-------+---------+---------+ 
+
+2025-08-14 23:41:17,502 - evalscope - INFO - Finished evaluation for Qwen2.5-0.5B-Instruct on ['gsm8k', 'arc']
+2025-08-14 23:41:17,503 - evalscope - INFO - Output directory: ./outputs\20250814_231047

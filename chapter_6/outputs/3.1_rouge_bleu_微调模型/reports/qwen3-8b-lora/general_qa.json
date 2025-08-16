@@ -1,0 +1,310 @@
+{
+    "name": "qwen3-8b-lora@general_qa",
+    "dataset_name": "general_qa",
+    "dataset_pretty_name": "General-QA",
+    "dataset_description": "A general question answering dataset for custom evaluation. For detailed instructions on how to use this benchmark, please refer to the [User Guide](https://evalscope.readthedocs.io/zh-cn/latest/advanced_guides/custom_dataset/llm.html#qa).",
+    "model_name": "qwen3-8b-lora",
+    "score": 0.5134,
+    "metrics": [
+        {
+            "name": "Rouge-1-R",
+            "num": 100,
+            "score": 0.5134,
+            "macro_score": 0.5134,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 100,
+                    "score": 0.5134,
+                    "macro_score": 0.5134,
+                    "subsets": [
+                        {
+                            "name": "r1_data_example_100",
+                            "score": 0.5134,
+                            "num": 100
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Rouge-1-P",
+            "num": 100,
+            "score": 0.2384,
+            "macro_score": 0.2384,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 100,
+                    "score": 0.2384,
+                    "macro_score": 0.2384,
+                    "subsets": [
+                        {
+                            "name": "r1_data_example_100",
+                            "score": 0.2384,
+                            "num": 100
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Rouge-1-F",
+            "num": 100,
+            "score": 0.3192,
+            "macro_score": 0.3192,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 100,
+                    "score": 0.3192,
+                    "macro_score": 0.3192,
+                    "subsets": [
+                        {
+                            "name": "r1_data_example_100",
+                            "score": 0.3192,
+                            "num": 100
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Rouge-2-R",
+            "num": 100,
+            "score": 0.2185,
+            "macro_score": 0.2185,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 100,
+                    "score": 0.2185,
+                    "macro_score": 0.2185,
+                    "subsets": [
+                        {
+                            "name": "r1_data_example_100",
+                            "score": 0.2185,
+                            "num": 100
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Rouge-2-P",
+            "num": 100,
+            "score": 0.0706,
+            "macro_score": 0.0706,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 100,
+                    "score": 0.0706,
+                    "macro_score": 0.0706,
+                    "subsets": [
+                        {
+                            "name": "r1_data_example_100",
+                            "score": 0.0706,
+                            "num": 100
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Rouge-2-F",
+            "num": 100,
+            "score": 0.1042,
+            "macro_score": 0.1042,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 100,
+                    "score": 0.1042,
+                    "macro_score": 0.1042,
+                    "subsets": [
+                        {
+                            "name": "r1_data_example_100",
+                            "score": 0.1042,
+                            "num": 100
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Rouge-L-R",
+            "num": 100,
+            "score": 0.4245,
+            "macro_score": 0.4245,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 100,
+                    "score": 0.4245,
+                    "macro_score": 0.4245,
+                    "subsets": [
+                        {
+                            "name": "r1_data_example_100",
+                            "score": 0.4245,
+                            "num": 100
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Rouge-L-P",
+            "num": 100,
+            "score": 0.0828,
+            "macro_score": 0.0828,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 100,
+                    "score": 0.0828,
+                    "macro_score": 0.0828,
+                    "subsets": [
+                        {
+                            "name": "r1_data_example_100",
+                            "score": 0.0828,
+                            "num": 100
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Rouge-L-F",
+            "num": 100,
+            "score": 0.1366,
+            "macro_score": 0.1366,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 100,
+                    "score": 0.1366,
+                    "macro_score": 0.1366,
+                    "subsets": [
+                        {
+                            "name": "r1_data_example_100",
+                            "score": 0.1366,
+                            "num": 100
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "bleu-1",
+            "num": 100,
+            "score": 0.1223,
+            "macro_score": 0.1223,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 100,
+                    "score": 0.1223,
+                    "macro_score": 0.1223,
+                    "subsets": [
+                        {
+                            "name": "r1_data_example_100",
+                            "score": 0.1223,
+                            "num": 100
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "bleu-2",
+            "num": 100,
+            "score": 0.0448,
+            "macro_score": 0.0448,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 100,
+                    "score": 0.0448,
+                    "macro_score": 0.0448,
+                    "subsets": [
+                        {
+                            "name": "r1_data_example_100",
+                            "score": 0.0448,
+                            "num": 100
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "bleu-3",
+            "num": 100,
+            "score": 0.0188,
+            "macro_score": 0.0188,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 100,
+                    "score": 0.0188,
+                    "macro_score": 0.0188,
+                    "subsets": [
+                        {
+                            "name": "r1_data_example_100",
+                            "score": 0.0188,
+                            "num": 100
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "bleu-4",
+            "num": 100,
+            "score": 0.0092,
+            "macro_score": 0.0092,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 100,
+                    "score": 0.0092,
+                    "macro_score": 0.0092,
+                    "subsets": [
+                        {
+                            "name": "r1_data_example_100",
+                            "score": 0.0092,
+                            "num": 100
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "analysis": "N/A"
+}

@@ -1,0 +1,106 @@
+2025-08-16 09:36:21,844 - evalscope - WARNING - Output type generation is not supported for service evaluation. Using server model adapter instead.
+2025-08-16 09:36:23,754 - evalscope - INFO - Dump task config to ./outputs\20250816_093620\configs\task_config_7b6a78.yaml
+2025-08-16 09:36:23,759 - evalscope - INFO - {
+    "model": "qwen3-8b",
+    "model_id": "qwen3-8b",
+    "model_args": {},
+    "model_task": "text_generation",
+    "template_type": null,
+    "chat_template": null,
+    "datasets": [
+        "general_qa"
+    ],
+    "dataset_args": {
+        "general_qa": {
+            "name": "general_qa",
+            "dataset_id": "D:\\PycharmProjects\\llm_sft\\chapter_6\\json_data",
+            "model_adapter": "generation",
+            "output_types": [
+                "generation"
+            ],
+            "subset_list": [
+                "r1_data_example_100"
+            ],
+            "metric_list": [
+                "AverageBLEU",
+                "AverageRouge"
+            ],
+            "few_shot_num": 0,
+            "few_shot_random": false,
+            "train_split": null,
+            "eval_split": "test",
+            "prompt_template": "Çë»Ø´ðÎÊÌâ\n{query}",
+            "system_prompt": null,
+            "query_template": null,
+            "pretty_name": "General-QA",
+            "description": "A general question answering dataset for custom evaluation. For detailed instructions on how to use this benchmark, please refer to the [User Guide](https://evalscope.readthedocs.io/zh-cn/latest/advanced_guides/custom_dataset/llm.html#qa).",
+            "tags": [
+                "QA",
+                "Custom"
+            ],
+            "filters": null,
+            "extra_params": {}
+        }
+    },
+    "dataset_dir": "C:\\Users\\YXY1109\\.cache\\modelscope\\hub\\datasets",
+    "dataset_hub": "modelscope",
+    "generation_config": {
+        "max_tokens": 2048,
+        "temperature": 0.0
+    },
+    "eval_type": "service",
+    "eval_backend": "Native",
+    "eval_config": null,
+    "stage": "all",
+    "limit": null,
+    "eval_batch_size": 8,
+    "mem_cache": false,
+    "use_cache": null,
+    "work_dir": "./outputs\\20250816_093620",
+    "outputs": null,
+    "ignore_errors": false,
+    "debug": false,
+    "dry_run": false,
+    "seed": 42,
+    "api_url": "http://127.0.0.1:8881/v1",
+    "api_key": "none",
+    "timeout": null,
+    "stream": false,
+    "judge_strategy": "llm",
+    "judge_worker_num": 5,
+    "judge_model_args": {
+        "model_id": "qwen2.5-72b-instruct",
+        "api_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "api_key": "sk-9fd16d484c144eeda004d5483dad6866",
+        "generation_config": {
+            "temperature": 0.0,
+            "max_tokens": 4096
+        },
+        "score_type": "pattern"
+    },
+    "analysis_report": false
+}
+2025-08-16 09:36:23,760 - evalscope - INFO - Start evaluating on dataset D:\PycharmProjects\llm_sft\chapter_6\json_data
+2025-08-16 09:36:23,763 - evalscope - INFO - Use settings: > few_shot_num: 0, > few_shot_split: None, > target_eval_split: test
+2025-08-16 09:42:26,899 - evalscope - INFO - Dump predictions to ./outputs\20250816_093620\predictions\qwen3-8b\general_qa_r1_data_example_100.jsonl.
+2025-08-16 09:42:37,844 - evalscope - INFO - 
+D:\PycharmProjects\llm_sft\chapter_6\json_data report table:
++----------+------------+-----------------+---------------------+-------+---------+---------+
+| Model    | Dataset    | Metric          | Subset              |   Num |   Score | Cat.0   |
++==========+============+=================+=====================+=======+=========+=========+
+| qwen3-8b | general_qa | AverageAccuracy | r1_data_example_100 |   100 |    0.97 | default |
++----------+------------+-----------------+---------------------+-------+---------+---------+ 
+
+2025-08-16 09:42:37,844 - evalscope - INFO - Skipping report analysis (`analysis_report=False`).
+2025-08-16 09:42:37,846 - evalscope - INFO - Dump report to: ./outputs\20250816_093620\reports\qwen3-8b\general_qa.json 
+
+2025-08-16 09:42:37,846 - evalscope - INFO - Evaluation finished on D:\PycharmProjects\llm_sft\chapter_6\json_data
+2025-08-16 09:42:37,849 - evalscope - INFO - Overall report table: 
++----------+------------+-----------------+---------------------+-------+---------+---------+
+| Model    | Dataset    | Metric          | Subset              |   Num |   Score | Cat.0   |
++==========+============+=================+=====================+=======+=========+=========+
+| qwen3-8b | general_qa | AverageAccuracy | r1_data_example_100 |   100 |    0.97 | default |
++----------+------------+-----------------+---------------------+-------+---------+---------+ 
+
+2025-08-16 09:42:37,849 - evalscope - INFO - Finished evaluation for qwen3-8b on ['general_qa']
+2025-08-16 09:42:37,849 - evalscope - INFO - Output directory: ./outputs\20250816_093620
