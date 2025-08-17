@@ -2,7 +2,9 @@ import json
 from typing import Dict, List
 
 import numpy as np
+import pandas as pd
 from sentence_transformers import SentenceTransformer
+from tqdm import tqdm
 
 
 def duplicate_removal(df_data, col_name):
@@ -12,10 +14,21 @@ def duplicate_removal(df_data, col_name):
     :param col_name:
     :return:
     """
-    df_data = df_data[df_data[col_name].notnull()]
-    df_data = df_data.drop_duplicates(subset=[col_name])
-    # print(f"基于{col_name}字段去重后，数据条数：{len(df_data)}")
-    return df_data
+    # 空值掩码（NaN、None、空字符串、仅空白字符都算空）
+    empty_mask = (
+            df_data[col_name].isna()
+            | df_data[col_name].astype(str).str.strip().eq('')
+    )
+
+    # 非空行去重，空行保持原样
+    res = (
+        pd.concat([
+            df_data.loc[~empty_mask].drop_duplicates(subset=[col_name]),
+            df_data.loc[empty_mask]
+        ])
+        .reset_index(drop=True)  # 如需保持连续索引
+    )
+    return res
 
 
 def build_corpus(records: List[Dict]) -> List[str]:
@@ -59,11 +72,14 @@ def semantic_deduplicate_stream(
     embeddings = model.encode(
         corpus, normalize_embeddings=True, batch_size=batch_size, show_progress_bar=True
     )
+    print(f"语义去重已计算句向量，数据条数：{len(record_list)}")
+    print(f"语义去重阈值为：{threshold}")
 
     # 3. 逐条去重
     keep_indices = []
     kept_vecs = []  # 仅保存已保留样本的向量
-    for idx, vec in enumerate(embeddings):
+    # for idx, vec in enumerate(embeddings):
+    for idx, vec in tqdm(enumerate(embeddings), total=len(embeddings), desc="语义去重"):
         if kept_vecs:  # 与之前所有保留样本比较
             sims = np.dot(kept_vecs, vec)  # shape=(k,)
             if sims.max() >= threshold:
@@ -79,13 +95,32 @@ def semantic_deduplicate_stream(
     return file_output
 
 
+def df_score_null(file_input: str, threshold: float = 0.8):
+    with open(file_input, encoding="utf-8") as f:
+        record_list = json.load(f)
+    # 过滤 _score >= 0.8
+    print(f"LLM分数阈值为：{threshold}")
+    filtered = [item for item in record_list if item.get("_score", 0) >= threshold]
+
+    # 把 None 替换为 ""
+    cleaned = [
+        {k: (v if v is not None else "") for k, v in record.items()}
+        for record in filtered
+    ]
+    return cleaned
+
+
 def semantic_main():
     input_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all_test.json"  # 输入 JSON 文件
     out_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all_test_semantic.json"  # 输出 JSON 文件
 
-    out_path = semantic_deduplicate_stream(input_path, out_path)
+    out_path = semantic_deduplicate_stream(input_path, out_path, batch_size=512)
     print(out_path)
 
 
 if __name__ == "__main__":
-    semantic_main()
+    # semantic_main()
+
+    json_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\8_all_score.json"
+    data_1 = df_score_null(json_path)
+    print(data_1)
