@@ -1,52 +1,85 @@
 import asyncio
+import logging
+import time
+from contextlib import contextmanager
 
 import pandas as pd
 
 from chapter_7.openai_call import async_main
 from chapter_7.utils import duplicate_removal, semantic_deduplicate
 
-# json_data_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all.json" #完整数据
-json_data_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all_test.json"  # 少量数据测试
+# ====== 日志配置 ======
+logging.basicConfig(
+    format="[%(asctime)s] %(message)s",
+    datefmt="%H:%M:%S",
+    level=logging.INFO
+)
 
-# 1，转为df
-df = pd.read_json(json_data_path)
-print(f"1，原始数据条数：{len(df)}")  # 原始数据条数：1653894
 
-# 2，数据instruction字段如果为空，保留，不为空的需要去重
-df = duplicate_removal(df, "instruction")  # 基于instruction字段去重后，数据条数：1408392
+# ====== 计时器工具 ======
+@contextmanager
+def timer(step_name: str):
+    """统计代码块耗时并打印日志"""
+    start = time.perf_counter()
+    yield
+    elapsed = time.perf_counter() - start
+    logging.info(f"{step_name} 耗时: {elapsed:.2f} 秒")
 
-# 3，input字段如果为空，数据保留，不为空的需要去重
-df = duplicate_removal(df, "input")  # 基于input字段去重后，数据条数：611360
 
-# 4，output字段如果为空，去除，需要去重
-df_clean = df.dropna(subset=['output'])  # 去除NaN
-df_clean = df_clean[df_clean['output'].astype(str).str.strip() != '']  # 去除空字符串（含仅空格的情况）
-df = duplicate_removal(df_clean, "output")  # 基于output字段去重后，数据条数：584312
+# 1，加载数据
+json_data_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all.json"  # 完整数据
+# json_data_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all_test.json"  # 少量数据测试
 
-# 5，instruction+input字段如果为空，去除，需要去重
-df_clean = df.dropna(subset=['instruction', 'input'], how='any')  # 先处理NaN值
-# 再处理空字符串（包括仅含空格的情况）
-df_clean = df_clean[(df_clean['instruction'].astype(str).str.strip() != '') &
-                    (df_clean['input'].astype(str).str.strip() != '')]
+with timer("1，读取原始数据"):
+    df = pd.read_json(json_data_path)
+logging.info(f"1，原始数据条数：{len(df)}")
 
-# 6，基于instruction和input两个字段进行去重，保留首次出现的行
-df = df_clean.drop_duplicates(subset=['instruction', 'input'], keep='first')
-print(f"6，pf去重后，数据条数：{len(df)}")  # 去重后，数据条数：584308
+# 2，基于 instruction 去重
+with timer("2，基于 instruction 去重"):
+    df = duplicate_removal(df, "instruction")
+logging.info(f"2，去重后数据条数：{len(df)}")
 
+# 3，基于 input 去重
+with timer("3，基于 input 去重"):
+    df = duplicate_removal(df, "input")
+logging.info(f"3，去重后数据条数：{len(df)}")
+
+# 4，去除 output 为空的数据，再基于 output 去重
+with timer("4，清理 output 并去重"):
+    df_clean = df.dropna(subset=['output'])
+    df_clean = df_clean[df_clean['output'].astype(str).str.strip() != '']
+    df = duplicate_removal(df_clean, "output")
+logging.info(f"4，去重后数据条数：{len(df)}")
+
+# 5，清理 instruction 和 input 为空的数据
+with timer("5，清理 instruction 和 input 为空的数据"):
+    df_clean = df.dropna(subset=['instruction', 'input'], how='any')
+    df_clean = df_clean[
+        (df_clean['instruction'].astype(str).str.strip() != '') &
+        (df_clean['input'].astype(str).str.strip() != '')
+        ]
+
+# 6，基于 instruction+input 去重
+with timer("6，基于 instruction+input 去重"):
+    df = df_clean.drop_duplicates(subset=['instruction', 'input'], keep='first')
+logging.info(f"6，去重后数据条数：{len(df)}")
+
+# 保存中间结果
 save_pd_json = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\6_all_pd.json"
-# 将df保存为json
-df.to_json(save_pd_json, orient="records", force_ascii=False)
+with timer("6.1，保存中间 JSON"):
+    df.to_json(save_pd_json, orient="records", force_ascii=False)
 
-# 7，instruction+input，语义去重（阈值 0.9）
+# 7，语义去重
 out_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\7_all_pd_deduplicate.json"
-out_path_7 = semantic_deduplicate(save_pd_json, out_path)
-print(f"7，基于语义去重后，数据路径：{out_path_7}")
+with timer("7，语义去重"):
+    out_path_7 = semantic_deduplicate(save_pd_json, out_path)
+logging.info(f"7，语义去重后数据路径：{out_path_7}")
 
-# 8，使用LLM对回答质量打分
-# input_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all_test.json"
+# 8，LLM 打分
 output_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\8_all_score.json"
-asyncio.run(async_main(out_path_7, output_path))
-print(f"8，基于LLM打分后，数据路径：{output_path}")
+with timer("8，LLM 打分"):
+    asyncio.run(async_main(out_path_7, output_path))
+logging.info(f"8，打分后数据路径：{output_path}")
 
-# 9，根据评分进行数据筛选
-pass
+# 9，后续筛选
+logging.info("全部步骤完成，可继续进行第 9 步筛选")

@@ -14,7 +14,7 @@ def duplicate_removal(df_data, col_name):
     """
     df_data = df_data[df_data[col_name].notnull()]
     df_data = df_data.drop_duplicates(subset=[col_name])
-    print(f"基于{col_name}字段去重后，数据条数：{len(df_data)}")
+    # print(f"基于{col_name}字段去重后，数据条数：{len(df_data)}")
     return df_data
 
 
