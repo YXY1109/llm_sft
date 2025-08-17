@@ -1,5 +1,8 @@
+import asyncio
+
 import pandas as pd
 
+from chapter_7.openai_call import async_main
 from chapter_7.utils import duplicate_removal, semantic_deduplicate
 
 # json_data_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all.json" #完整数据
@@ -36,7 +39,14 @@ df.to_json(save_pd_json, orient="records", force_ascii=False)
 
 # 7，instruction+input，语义去重（阈值 0.9）
 out_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\7_all_pd_deduplicate.json"
-out_path = semantic_deduplicate(save_pd_json, out_path)
-print(f"7，基于语义去重后，数据条数：{len(out_path)}")
+out_path_7 = semantic_deduplicate(save_pd_json, out_path)
+print(f"7，基于语义去重后，数据路径：{out_path_7}")
 
 # 8，使用LLM对回答质量打分
+# input_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all_test.json"
+output_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\8_all_score.json"
+asyncio.run(async_main(out_path_7, output_path))
+print(f"8，基于LLM打分后，数据路径：{output_path}")
+
+# 9，根据评分进行数据筛选
+pass

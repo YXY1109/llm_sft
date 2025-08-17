@@ -27,7 +27,7 @@ def save_json(data: List[Dict], path: str, *, indent=2):
     """写回 JSON"""
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=indent)
-    print(f"语义去重已保存去重后的结果至: {path}")
+    # print(f"语义去重已保存去重后的结果至: {path}")
 
 
 def semantic_deduplicate(
