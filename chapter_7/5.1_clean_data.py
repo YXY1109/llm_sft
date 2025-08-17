@@ -6,7 +6,7 @@ from contextlib import contextmanager
 import pandas as pd
 
 from chapter_7.openai_call import async_main
-from chapter_7.utils import duplicate_removal, semantic_deduplicate
+from chapter_7.utils import duplicate_removal, semantic_deduplicate_stream
 
 # ====== 日志配置 ======
 logging.basicConfig(
@@ -72,7 +72,7 @@ with timer("6.1，保存中间 JSON"):
 # 7，语义去重，本地执行
 out_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\7_all_pd_deduplicate.json"
 with timer("7，语义去重"):
-    out_path_7 = semantic_deduplicate(save_pd_json, out_path)
+    out_path_7 = semantic_deduplicate_stream(save_pd_json, out_path)
 logging.info(f"7，语义去重后数据路径：{out_path_7}")
 
 # 8，LLM 打分，百炼接口，注意token消耗
