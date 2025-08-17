@@ -1,5 +1,5 @@
 import json
-from typing import List, Dict
+from typing import Dict, List
 
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -16,6 +16,18 @@ def duplicate_removal(df_data, col_name):
     df_data = df_data.drop_duplicates(subset=[col_name])
     print(f"基于{col_name}字段去重后，数据条数：{len(df_data)}")
     return df_data
+
+
+def build_corpus(records: List[Dict]) -> List[str]:
+    """把 instruction 与 input 拼接成待编码的文本"""
+    return [f"{r['instruction']} {r['input']}" for r in records]
+
+
+def save_json(data: List[Dict], path: str, *, indent=2):
+    """写回 JSON"""
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=indent)
+    print(f"语义去重已保存去重后的结果至: {path}")
 
 
 def semantic_deduplicate(
@@ -38,16 +50,6 @@ def semantic_deduplicate(
 
     if not record_list:
         return record_list
-
-    def build_corpus(records: List[Dict]) -> List[str]:
-        """把 instruction 与 input 拼接成待编码的文本"""
-        return [f"{r['instruction']} {r['input']}" for r in records]
-
-    def save_json(data: List[Dict], path: str, *, indent=2):
-        """写回 JSON"""
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=indent)
-        print(f"语义去重已保存去重后的结果至: {path}")
 
     corpus = build_corpus(record_list)
     model = SentenceTransformer(model_name)
@@ -75,7 +77,7 @@ def semantic_deduplicate(
     return file_output
 
 
-def main():
+def semantic_main():
     input_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all_test.json"  # 输入 JSON 文件
     out_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all_test_semantic.json"  # 输出 JSON 文件
 
@@ -84,4 +86,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    semantic_main()

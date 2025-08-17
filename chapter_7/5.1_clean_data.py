@@ -1,6 +1,6 @@
 import pandas as pd
 
-from chapter_7.utils import semantic_deduplicate, duplicate_removal
+from chapter_7.utils import duplicate_removal, semantic_deduplicate
 
 # json_data_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all.json" #完整数据
 json_data_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all_test.json"  # 少量数据测试
@@ -39,8 +39,4 @@ out_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\7_all_pd_deduplicat
 out_path = semantic_deduplicate(save_pd_json, out_path)
 print(f"7，基于语义去重后，数据条数：{len(out_path)}")
 
-# output与instruction+input的语义关联性，合理性判断
-
-# 统计instruction+input的长度，output的长度，如果特别长的，去掉
-
-# 使用LLM对回答质量打分
+# 8，使用LLM对回答质量打分
