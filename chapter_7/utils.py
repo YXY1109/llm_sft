@@ -1,8 +1,8 @@
 import json
 from typing import Dict, List
 
+import numpy as np
 from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
 
 
 def duplicate_removal(df_data, col_name):
@@ -30,50 +30,52 @@ def save_json(data: List[Dict], path: str, *, indent=2):
     # print(f"语义去重已保存去重后的结果至: {path}")
 
 
-def semantic_deduplicate(
+def semantic_deduplicate_stream(
         file_input: str,
         file_output: str,
         threshold: float = 0.9,
         model_name: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        batch_size: int = 64,
 ) -> str:
     """
-    基于语义相似度去重
-    :param file_input: 原始文件路径
-    :param file_output: 输出文件路径
-    :param threshold: 相似度阈值，超过即认为重复
-    :param model_name: SentenceTransformer 模型
-    :return: 去重后的数据文件
-    """
+       基于语义相似度去重
+       :param file_input: 原始文件路径
+       :param file_output: 输出文件路径
+       :param threshold: 相似度阈值，超过即认为重复
+       :param model_name: SentenceTransformer 模型
+       :param batch_size: 批处理大小
+       :return: 去重后的数据文件
+       """
 
-    with open(file_input, "r", encoding="utf-8") as f:
+    # 1. 读数据
+    with open(file_input, encoding="utf-8") as f:
         record_list = json.load(f)
-
     if not record_list:
         return record_list
 
-    corpus = build_corpus(record_list)
+    # 2. 计算句向量
     model = SentenceTransformer(model_name)
-    embeddings = model.encode(corpus, normalize_embeddings=True)
+    corpus = [f"{r['instruction']} {r['input']}" for r in record_list]
+    embeddings = model.encode(
+        corpus, normalize_embeddings=True, batch_size=batch_size, show_progress_bar=True
+    )
 
-    sim_matrix = cosine_similarity(embeddings)  # shape=(n, n)
-
+    # 3. 逐条去重
     keep_indices = []
-    skip = set()
-    n = len(record_list)
-
-    for i in range(n):
-        if i in skip:
-            continue
-        keep_indices.append(i)
-        for j in range(i + 1, n):
-            if j in skip:
+    kept_vecs = []  # 仅保存已保留样本的向量
+    for idx, vec in enumerate(embeddings):
+        if kept_vecs:  # 与之前所有保留样本比较
+            sims = np.dot(kept_vecs, vec)  # shape=(k,)
+            if sims.max() >= threshold:
                 continue
-            if sim_matrix[i, j] >= threshold:
-                skip.add(j)
+        keep_indices.append(idx)
+        kept_vecs.append(vec)
 
+    # 4. 写回
     deduped = [record_list[i] for i in keep_indices]
-    print(f"原始条数: {n}, 去重后条数: {len(deduped)}")
-    save_json(deduped, file_output)
+    print(f"原始条数: {len(record_list)}, 去重后条数: {len(deduped)}")
+    with open(file_output, "w", encoding="utf-8") as f:
+        json.dump(deduped, f, ensure_ascii=False, indent=2)
     return file_output
 
 
@@ -81,7 +83,7 @@ def semantic_main():
     input_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all_test.json"  # 输入 JSON 文件
     out_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all_test_semantic.json"  # 输出 JSON 文件
 
-    out_path = semantic_deduplicate(input_path, out_path)
+    out_path = semantic_deduplicate_stream(input_path, out_path)
     print(out_path)
 
 
