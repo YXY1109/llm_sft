@@ -69,13 +69,13 @@ save_pd_json = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\6_all_pd.json"
 with timer("6.1，保存中间 JSON"):
     df.to_json(save_pd_json, orient="records", force_ascii=False)
 
-# 7，语义去重
+# 7，语义去重，本地执行
 out_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\7_all_pd_deduplicate.json"
 with timer("7，语义去重"):
     out_path_7 = semantic_deduplicate(save_pd_json, out_path)
 logging.info(f"7，语义去重后数据路径：{out_path_7}")
 
-# 8，LLM 打分
+# 8，LLM 打分，百炼接口，注意token消耗
 output_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\8_all_score.json"
 with timer("8，LLM 打分"):
     asyncio.run(async_main(out_path_7, output_path))
