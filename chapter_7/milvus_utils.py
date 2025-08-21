@@ -189,13 +189,13 @@ class MilvusHelper:
                query_vectors: np.ndarray,
                topk: int = 10,
                nprobe: int = 16,
-               vector_field: str = "vector",
+               vector_field: str = "dense_vector",
                output_fields: List[str] = None) -> List[List[Dict[str, Any]]]:
         """
         向量检索，返回 [[{"id":..., "distance":..., "text":...}, ...], ...]
         """
         if output_fields is None:
-            output_fields = ["text"]
+            output_fields = ["output"]
         search_params = {
             "metric_type": "COSINE",
             "params": {"nprobe": nprobe}
