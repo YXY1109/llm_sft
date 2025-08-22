@@ -1,12 +1,11 @@
+import json
 import os
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 from dotenv import load_dotenv
-from pymilvus import (
-    connections, FieldSchema, CollectionSchema, DataType,
-    Collection, utility, db
-)
+from pymilvus import (Collection, CollectionSchema, DataType, FieldSchema,
+                      connections, db, utility)
 
 
 class MilvusHelper:
@@ -146,34 +145,31 @@ class MilvusHelper:
     # 数据写入
     # ----------------------------------
     def insert(self,
-               vectors: np.ndarray,
-               texts: List[str],
+               instructions: List[str],
+               inputs: List[str],
+               outputs: List[str],
+               dense_vectors,
+               sparse_vectors,
                batch_size: int = 5000) -> List[int]:
         """
         批量插入数据，返回主键列表
         """
-
         ids = []
-        for i in range(0, len(vectors), batch_size):
-            batch_vectors = vectors[i:i + batch_size].tolist()
-            batch_texts = texts[i:i + batch_size]
+        for i in range(0, len(instructions), batch_size):
+            batch_instructions = instructions[i:i + batch_size]
+            batch_inputs = inputs[i:i + batch_size]
+            batch_outputs = outputs[i:i + batch_size]
+            batch_dense = dense_vectors[i:i + batch_size]
+            batch_sparse = sparse_vectors[i:i + batch_size]
 
-            batch_sparse = []
-            for row in batch_vectors:
-                # 取绝对值最大的 topk 个维度
-                indices = np.argpartition(np.abs(row), -50)[-50:]
-                sparse_dict = {int(idx): float(row[idx])
-                               for idx in indices if row[idx] != 0}
-                batch_sparse.append(sparse_dict)
-
-            data = [
-                batch_texts,
-                batch_texts,
-                batch_texts,
-                batch_vectors,
+            batch_data = [
+                batch_instructions,
+                batch_inputs,
+                batch_outputs,
+                batch_dense,
                 batch_sparse
             ]
-            insert_res = self.collection.insert(data)
+            insert_res = self.collection.insert(batch_data)
             ids.extend(insert_res.primary_keys)
         return ids
 
@@ -274,26 +270,50 @@ class MilvusHelper:
 # -------------------------------------------------
 if __name__ == "__main__":
     milvus = MilvusHelper()
-    milvus.create_collection("demo")
+    milvus.create_collection("medical_qa_test")
     milvus.build_index()
 
-    # 构造 100 条随机数据
-    vectors = np.random.rand(100, 1024).astype("float32")
-    texts = [f"text_{i}" for i in range(100)]
-    milvus.insert(vectors, texts)
+    json_file = r"/Users/cj/PycharmProjects/LLM_SFT/chapter_7/merge_data/4_all_test.json"
+    # 读取json文件的数据
+    with open(json_file, "r") as f:
+        data_list = json.load(f)
+
+    # 构造milvus数据
+    instruction_list = []
+    input_list = []
+    output_list = []
+    vector_str_list = []
+    for data in data_list:
+        instruction_list.append(data["instruction"])
+        input_list.append(data["input"])
+        output_list.append(data["output"])
+        vector_str_list.append(data["instruction"] + data["input"])
+
+    # todo 调用bge-m3接口，获取文本的稠密向量和稀疏向量
+    dense_vectors, sparse_vectors = get_embeddings(vector_str_list)
+
+    # 插入数据
+    milvus.insert(instruction_list, input_list, output_list, dense_vectors, sparse_vectors)
     milvus.flush()
     print("Total rows:", milvus.count())
 
-    # 检索
-    q = np.random.rand(1, 1024).astype("float32")
-    res = milvus.search(q, topk=5)
-    print("Search result:", res)
+    # 构造 100 条随机数据
+    # vectors = np.random.rand(100, 1024).astype("float32")
+    # texts = [f"text_{i}" for i in range(100)]
+    # milvus.insert(vectors, texts)
+    # milvus.flush()
+    # print("Total rows:", milvus.count())
 
-    # 查询
-    rows = milvus.query("id < 10")
-    print("Query result:", rows)
-
-    # 清理
-    milvus.release()
-    milvus.drop_collection("demo")
-    milvus.disconnect()
+    # # 检索
+    # q = np.random.rand(1, 1024).astype("float32")
+    # res = milvus.search(q, topk=5)
+    # print("Search result:", res)
+    #
+    # # 查询
+    # rows = milvus.query("id < 10")
+    # print("Query result:", rows)
+    #
+    # # 清理
+    # milvus.release()
+    # milvus.drop_collection("demo")
+    # milvus.disconnect()
