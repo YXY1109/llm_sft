@@ -1,12 +1,13 @@
+import json
 import os
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 from dotenv import load_dotenv
-from pymilvus import (
-    connections, FieldSchema, CollectionSchema, DataType,
-    Collection, utility, db
-)
+from pymilvus import (Collection, CollectionSchema, DataType, FieldSchema,
+                      connections, db, utility)
+
+from chapter_7.utils import model_embedding_bgem3
 
 
 class MilvusHelper:
@@ -15,9 +16,6 @@ class MilvusHelper:
     """
 
     def __init__(self, alias: str = "medical", timeout: int = 30):
-        """
-        连接 Milvus Server
-        """
         load_dotenv()
         self.alias = alias
         self.db_name = os.getenv('MILVUS_DATABASE_NAME')
@@ -34,9 +32,6 @@ class MilvusHelper:
         self.collection: Optional[Collection] = None
         print(f"[MilvusHelper] Connected to db={self.db_name}")
 
-    # ----------------------------------
-    # 数据库级别
-    # ----------------------------------
     def create_database(self, timeout: int = 10):
         """若数据库不存在则创建"""
         if self.db_name not in db.list_database():
@@ -50,9 +45,6 @@ class MilvusHelper:
         db.using_database(self.db_name)
         print(f"[MilvusHelper] Switched to database '{self.db_name}'.")
 
-    # ----------------------------------
-    # Collection 级别
-    # ----------------------------------
     def create_collection(self, collection_name: str):
         """
         创建（或获取已存在）的 Collection，支持可变长 varchar 字段
@@ -71,10 +63,10 @@ class MilvusHelper:
                         auto_id=True),
             FieldSchema(name="instruction",
                         dtype=DataType.VARCHAR,
-                        max_length=512),
+                        max_length=1024),
             FieldSchema(name="input",
                         dtype=DataType.VARCHAR,
-                        max_length=512),
+                        max_length=1024),
             FieldSchema(name="output",
                         dtype=DataType.VARCHAR,
                         max_length=4096),
@@ -103,18 +95,13 @@ class MilvusHelper:
             print(
                 f"[MilvusHelper] Collection '{collection_name}' does not exist.")
 
-    # ----------------------------------
-    # 索引
-    # ----------------------------------
     def build_index(self,
-
                     index_type: str = "IVF_FLAT",
                     metric_type: str = "COSINE",
                     nlist: int = 8192):
         """
         为向量字段创建索引
         """
-
         index_params = {
             "index_type": index_type,
             "metric_type": metric_type,
@@ -137,39 +124,27 @@ class MilvusHelper:
             field_name="sparse_vector",
             index_params=sparse_index_params
         )
-        self.collection.load()  # 建完索引后 load
-        print(
-            f"[MilvusHelper] Index built on successful collection. "
-            f"(type={index_type}, metric={metric_type}).")
+        self.collection.load()
+        print(f"[MilvusHelper] Index built on successful collection. "
+              f"(type={index_type}, metric={metric_type}).")
 
-    # ----------------------------------
-    # 数据写入
-    # ----------------------------------
-    def insert(self,
-               vectors: np.ndarray,
-               texts: List[str],
-               batch_size: int = 5000) -> List[int]:
+    def insert(self, instructions: List[str], inputs: List[str], outputs: List[str], vectors: np.ndarray,
+               sparses: List[dict], batch_size: int = 5000) -> List[int]:
         """
         批量插入数据，返回主键列表
         """
-
         ids = []
         for i in range(0, len(vectors), batch_size):
-            batch_vectors = vectors[i:i + batch_size].tolist()
-            batch_texts = texts[i:i + batch_size]
-
-            batch_sparse = []
-            for row in batch_vectors:
-                # 取绝对值最大的 topk 个维度
-                indices = np.argpartition(np.abs(row), -50)[-50:]
-                sparse_dict = {int(idx): float(row[idx])
-                               for idx in indices if row[idx] != 0}
-                batch_sparse.append(sparse_dict)
+            batch_instructions = instructions[i:i + batch_size]
+            batch_inputs = inputs[i:i + batch_size]
+            batch_outputs = outputs[i:i + batch_size]
+            batch_vectors = vectors[i:i + batch_size]
+            batch_sparse = sparses[i:i + batch_size]
 
             data = [
-                batch_texts,
-                batch_texts,
-                batch_texts,
+                batch_instructions,
+                batch_inputs,
+                batch_outputs,
                 batch_vectors,
                 batch_sparse
             ]
@@ -182,9 +157,6 @@ class MilvusHelper:
         self.collection.flush()
         print("[MilvusHelper] Flushed.")
 
-    # ----------------------------------
-    # 相似度检索
-    # ----------------------------------
     def search(self,
                query_vectors: np.ndarray,
                topk: int = 10,
@@ -218,27 +190,6 @@ class MilvusHelper:
             results.append(hits_list)
         return results
 
-    # ----------------------------------
-    # 查询 & 删除
-    # ----------------------------------
-    def query(self,
-              expr: str,
-              output_fields: List[str] = None,
-              limit: int = 100) -> List[Dict[str, Any]]:
-        """
-        根据表达式查询
-        例：expr = "id in [1, 2, 3]"
-        """
-        if output_fields is None:
-            output_fields = ["id", "input"]
-        res = self.collection.query(
-            expr=expr,
-            output_fields=output_fields,
-            limit=limit,
-            using=self.alias
-        )
-        return res
-
     def delete(self, expr: str):
         """
         根据表达式删除
@@ -247,17 +198,11 @@ class MilvusHelper:
         self.collection.delete(expr=expr)
         print(f"[MilvusHelper] Deleted by expr: {expr}")
 
-    # ----------------------------------
-    # 统计信息
-    # ----------------------------------
     def count(self) -> int:
         """返回 Collection 行数"""
         self.collection.flush()
         return self.collection.num_entities
 
-    # ----------------------------------
-    # 资源释放
-    # ----------------------------------
     def release(self):
         """释放 Collection 内存"""
         self.collection.release()
@@ -269,31 +214,41 @@ class MilvusHelper:
         print("[MilvusHelper] Disconnected.")
 
 
-# -------------------------------------------------
-# 使用示例（可直接 python milvus_helper.py 运行测试）
-# -------------------------------------------------
 if __name__ == "__main__":
     milvus = MilvusHelper()
-    milvus.create_collection("demo")
+    milvus.create_collection("demo_test")
     milvus.build_index()
+    print("Collection created.")
 
-    # 构造 100 条随机数据
-    vectors = np.random.rand(100, 1024).astype("float32")
-    texts = [f"text_{i}" for i in range(100)]
-    milvus.insert(vectors, texts)
+    json_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all_test.json"
+    with open(json_path, "r", encoding="utf-8") as f:
+        data_list = json.load(f)
+
+    instruction_list = []
+    input_list = []
+    output_list = []
+    instruction_input_list = []
+
+    for data in data_list:
+        instruction_list.append(data["instruction"])
+        input_list.append(data["input"])
+        output_list.append(data["output"])
+        instruction_input_list.append(data["instruction"] + data["input"])
+
+    bge_dict = model_embedding_bgem3(instruction_input_list)
+    vectors_list = bge_dict.get("dense_vecs")
+    sparse_list = bge_dict.get("sparse_vecs")
+
+    milvus.insert(instruction_list, input_list, output_list, vectors_list, sparse_list, batch_size=5)
     milvus.flush()
     print("Total rows:", milvus.count())
 
     # 检索
-    q = np.random.rand(1, 1024).astype("float32")
-    res = milvus.search(q, topk=5)
-    print("Search result:", res)
-
-    # 查询
-    rows = milvus.query("id < 10")
-    print("Query result:", rows)
+    # q = np.random.rand(1, 1024).astype("float32")
+    # res = milvus.search(q, topk=5)
+    # print("Search result:", res)
 
     # 清理
-    milvus.release()
-    milvus.drop_collection("demo")
-    milvus.disconnect()
+    # milvus.release()
+    # milvus.drop_collection("demo")
+    # milvus.disconnect()

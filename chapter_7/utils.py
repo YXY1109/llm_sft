@@ -1,9 +1,9 @@
 import json
-from typing import Dict, List
+from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
-from sentence_transformers import SentenceTransformer
+import requests
 from tqdm import tqdm
 
 
@@ -51,14 +51,15 @@ def semantic_deduplicate_stream(
         batch_size: int = 64,
 ) -> str:
     """
-       基于语义相似度去重
-       :param file_input: 原始文件路径
-       :param file_output: 输出文件路径
-       :param threshold: 相似度阈值，超过即认为重复
-       :param model_name: SentenceTransformer 模型
-       :param batch_size: 批处理大小
-       :return: 去重后的数据文件
-       """
+   基于语义相似度去重，过时了，太慢了
+   :param file_input: 原始文件路径
+   :param file_output: 输出文件路径
+   :param threshold: 相似度阈值，超过即认为重复
+   :param model_name: SentenceTransformer 模型
+   :param batch_size: 批处理大小
+   :return: 去重后的数据文件
+   """
+    from sentence_transformers import SentenceTransformer
 
     # 1. 读数据
     with open(file_input, encoding="utf-8") as f:
@@ -110,6 +111,40 @@ def df_score_null(file_input: str, threshold: float = 0.8):
     return cleaned
 
 
+def model_embedding_bgem3(input_words: List[str] | str) -> Dict[str, Any]:
+    if isinstance(input_words, str):
+        input_words = [input_words]
+
+    input_words = [s.strip() for s in input_words if s.strip()]
+    if not input_words:
+        return {"dense_vecs": [], "sparse_vecs": [], "colbert_vecs": []}
+
+    try:
+        embedding_url = "http://127.0.0.1:8010/bge_m3"
+        payload = {
+            "sentences": input_words,
+            "dense": True,
+            "sparse": True,
+            "colbert_vecs": False
+        }
+        timeout = max(10, len(input_words))
+        resp = requests.post(embedding_url, json=payload, timeout=timeout)
+        resp.raise_for_status()
+
+        data_result = resp.json()["result"]
+
+        return_dict = {
+            "dense_vecs": np.array(data_result["dense_vecs"], dtype=np.float32),
+            "dense_shape": data_result["dense_shape"],
+            "sparse_vecs": [{int(k): float(v) for k, v in sp.items()}
+                            for sp in data_result["sparse_vecs"]]
+        }
+        return return_dict
+    except Exception as e:
+        print(f"向量接口异常：{e}")
+        return {}
+
+
 def semantic_main():
     input_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all_test.json"  # 输入 JSON 文件
     out_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all_test_semantic.json"  # 输出 JSON 文件
@@ -121,6 +156,9 @@ def semantic_main():
 if __name__ == "__main__":
     # semantic_main()
 
-    json_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\8_all_score.json"
-    data_1 = df_score_null(json_path)
-    print(data_1)
+    # json_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\8_all_score.json"
+    # data_1 = df_score_null(json_path)
+    # print(data_1)
+
+    data = model_embedding_bgem3("你好")
+    print(data)
