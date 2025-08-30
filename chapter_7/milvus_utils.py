@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import numpy as np
 from dotenv import load_dotenv
@@ -15,45 +15,39 @@ class MilvusHelper:
     Milvus 2.5.6 常用功能封装
     """
 
-    def __init__(self, alias: str = "medical", timeout: int = 30):
+    def __init__(self, db_name="", alias="medical"):
         load_dotenv()
-        self.alias = alias
-        self.db_name = os.getenv('MILVUS_DATABASE_NAME')
+        self.db_name = db_name if db_name else os.getenv('MILVUS_DATABASE_NAME')
+        self.alias = alias  # 连接别名，用于后续操作关联
+        self.collection = None
 
+    def connect(self, timeout: int = 30):
         connections.connect(
             alias=self.alias,
             host=os.getenv('MILVUS_HOST'),
             port=os.getenv('MILVUS_PORT'),
             user=os.getenv('MILVUS_USER'),
             password=os.getenv('MILVUS_PASSWORD'),
-            db_name=self.db_name,
             timeout=timeout
         )
-        self.collection: Optional[Collection] = None
-        print(f"[MilvusHelper] Connected to db={self.db_name}")
+        print(f"[MilvusHelper] Connected to Milvus successfully")
 
-    def create_database(self, timeout: int = 10):
-        """若数据库不存在则创建"""
-        if self.db_name not in db.list_database():
-            db.create_database(self.db_name, timeout=timeout)
+        # 切换或创建数据库，需指定连接别名
+        if self.db_name not in db.list_database(using=self.alias):
+            db.create_database(self.db_name, using=self.alias, timeout=timeout)
             print(f"[MilvusHelper] Database '{self.db_name}' created.")
         else:
             print(f"[MilvusHelper] Database '{self.db_name}' already exists.")
+        db.using_database(self.db_name, using=self.alias)  # 切换到目标数据库
 
-    def use_database(self):
-        """切换数据库"""
-        db.using_database(self.db_name)
-        print(f"[MilvusHelper] Switched to database '{self.db_name}'.")
-
-    def create_collection(self, collection_name: str):
+    def get_or_create_collection(self, collection_name: str):
         """
         创建（或获取已存在）的 Collection，支持可变长 varchar 字段
         """
         if utility.has_collection(collection_name, using=self.alias):
             self.collection = Collection(
                 name=collection_name, using=self.alias)
-            print(
-                f"[MilvusHelper] Collection '{collection_name}' already exists.")
+            print(f"[MilvusHelper] Collection '{collection_name}' already exists.")
             return self.collection
 
         fields = [
@@ -98,7 +92,7 @@ class MilvusHelper:
     def build_index(self,
                     index_type: str = "IVF_FLAT",
                     metric_type: str = "COSINE",
-                    nlist: int = 8192):
+                    nlist: int = 4096):
         """
         为向量字段创建索引
         """
@@ -128,18 +122,21 @@ class MilvusHelper:
         print(f"[MilvusHelper] Index built on successful collection. "
               f"(type={index_type}, metric={metric_type}).")
 
-    def insert(self, instructions: List[str], inputs: List[str], outputs: List[str], vectors: np.ndarray,
-               sparses: List[dict], batch_size: int = 5000) -> List[int]:
+    def insert(self, instructions: List[str], inputs: List[str], outputs: List[str], vectors_dict: dict,
+               batch_size: int = 5000) -> List[int]:
         """
         批量插入数据，返回主键列表
         """
+        vectors_list = vectors_dict.get("dense_vecs")
+        sparse_list = vectors_dict.get("sparse_vecs")
+
         ids = []
-        for i in range(0, len(vectors), batch_size):
+        for i in range(0, len(vectors_list), batch_size):
             batch_instructions = instructions[i:i + batch_size]
             batch_inputs = inputs[i:i + batch_size]
             batch_outputs = outputs[i:i + batch_size]
-            batch_vectors = vectors[i:i + batch_size]
-            batch_sparse = sparses[i:i + batch_size]
+            batch_vectors = vectors_list[i:i + batch_size]
+            batch_sparse = sparse_list[i:i + batch_size]
 
             data = [
                 batch_instructions,
@@ -160,14 +157,11 @@ class MilvusHelper:
     def search(self,
                query_vectors: np.ndarray,
                topk: int = 10,
-               nprobe: int = 16,
-               vector_field: str = "vector",
+               nprobe: int = 48,
+               vector_field: str = "dense_vector",
                output_fields: List[str] = None) -> List[List[Dict[str, Any]]]:
-        """
-        向量检索，返回 [[{"id":..., "distance":..., "text":...}, ...], ...]
-        """
         if output_fields is None:
-            output_fields = ["text"]
+            output_fields = ["instruction", "input", "output"]
         search_params = {
             "metric_type": "COSINE",
             "params": {"nprobe": nprobe}
@@ -214,13 +208,13 @@ class MilvusHelper:
         print("[MilvusHelper] Disconnected.")
 
 
-if __name__ == "__main__":
-    milvus = MilvusHelper()
-    milvus.create_collection("demo_test")
-    milvus.build_index()
-    print("Collection created.")
+def insert_data(json_path=r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all_test.json"):
+    helper = MilvusHelper()
+    helper.connect()
+    helper.get_or_create_collection("demo_test")
+    helper.build_index()
+    print("Milvus初始化完成，开始插入数据")
 
-    json_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all_test.json"
     with open(json_path, "r", encoding="utf-8") as f:
         data_list = json.load(f)
 
@@ -236,19 +230,22 @@ if __name__ == "__main__":
         instruction_input_list.append(data["instruction"] + data["input"])
 
     bge_dict = model_embedding_bgem3(instruction_input_list)
+
+    helper.insert(instruction_list, input_list, output_list, bge_dict, batch_size=5)
+    helper.flush()
+    print("Total rows:", helper.count())
+
+
+def search_data(search_query="头发越来越少，只掉不长，不知是心里抑郁造成"):
+    helper = MilvusHelper()
+    helper.connect()
+    helper.get_or_create_collection("demo_test")
+
+    bge_dict = model_embedding_bgem3(search_query)
     vectors_list = bge_dict.get("dense_vecs")
-    sparse_list = bge_dict.get("sparse_vecs")
+    result_data = helper.search(vectors_list)
+    print(result_data)
 
-    milvus.insert(instruction_list, input_list, output_list, vectors_list, sparse_list, batch_size=5)
-    milvus.flush()
-    print("Total rows:", milvus.count())
 
-    # 检索
-    # q = np.random.rand(1, 1024).astype("float32")
-    # res = milvus.search(q, topk=5)
-    # print("Search result:", res)
-
-    # 清理
-    # milvus.release()
-    # milvus.drop_collection("demo")
-    # milvus.disconnect()
+if __name__ == "__main__":
+    search_data()
