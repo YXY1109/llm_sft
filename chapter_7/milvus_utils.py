@@ -6,15 +6,12 @@ import numpy as np
 from dotenv import load_dotenv
 from pymilvus import (Collection, CollectionSchema, DataType, FieldSchema,
                       connections, db, utility)
+from tqdm import tqdm
 
 from chapter_7.utils import model_embedding_bgem3
 
 
 class MilvusHelper:
-    """
-    Milvus 2.5.6 常用功能封装
-    """
-
     def __init__(self, db_name="", alias="medical"):
         load_dotenv()
         self.db_name = db_name if db_name else os.getenv('MILVUS_DATABASE_NAME')
@@ -51,10 +48,9 @@ class MilvusHelper:
             return self.collection
 
         fields = [
-            FieldSchema(name="id",
+            FieldSchema(name="index",
                         dtype=DataType.INT64,
-                        is_primary=True,
-                        auto_id=True),
+                        is_primary=True),
             FieldSchema(name="instruction",
                         dtype=DataType.VARCHAR,
                         max_length=1024),
@@ -122,7 +118,8 @@ class MilvusHelper:
         print(f"[MilvusHelper] Index built on successful collection. "
               f"(type={index_type}, metric={metric_type}).")
 
-    def insert(self, instructions: List[str], inputs: List[str], outputs: List[str], vectors_dict: dict,
+    def insert(self, index: List[int], instructions: List[str], inputs: List[str], outputs: List[str],
+               vectors_dict: dict,
                batch_size: int = 5000) -> List[int]:
         """
         批量插入数据，返回主键列表
@@ -132,6 +129,7 @@ class MilvusHelper:
 
         ids = []
         for i in range(0, len(vectors_list), batch_size):
+            batch_id = index[i:i + batch_size]
             batch_instructions = instructions[i:i + batch_size]
             batch_inputs = inputs[i:i + batch_size]
             batch_outputs = outputs[i:i + batch_size]
@@ -139,6 +137,7 @@ class MilvusHelper:
             batch_sparse = sparse_list[i:i + batch_size]
 
             data = [
+                batch_id,
                 batch_instructions,
                 batch_inputs,
                 batch_outputs,
@@ -218,12 +217,14 @@ def insert_data(json_path=r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_al
     with open(json_path, "r", encoding="utf-8") as f:
         data_list = json.load(f)
 
+    id_list = []
     instruction_list = []
     input_list = []
     output_list = []
     instruction_input_list = []
 
-    for data in data_list:
+    for idx, data in enumerate(data_list, 1):
+        id_list.append(idx)
         instruction_list.append(data["instruction"])
         input_list.append(data["input"])
         output_list.append(data["output"])
@@ -231,7 +232,7 @@ def insert_data(json_path=r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_al
 
     bge_dict = model_embedding_bgem3(instruction_input_list)
 
-    helper.insert(instruction_list, input_list, output_list, bge_dict, batch_size=5)
+    helper.insert(id_list, instruction_list, input_list, output_list, bge_dict, batch_size=5)
     helper.flush()
     print("Total rows:", helper.count())
 
@@ -245,7 +246,37 @@ def search_data(search_query="头发越来越少，只掉不长，不知是心�
     vectors_list = bge_dict.get("dense_vecs")
     result_data = helper.search(vectors_list)
     print(result_data)
+    return result_data
+
+
+def duplicate_remove():
+    json_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all_test.json"
+
+    with open(json_path, "r", encoding="utf-8") as f:
+        data_list = json.load(f)
+
+    skipped_ids = set()
+
+    for index, data in tqdm(enumerate(data_list, 1)):
+        if index in skipped_ids:
+            print(f"跳过重复数据：ID：{index}")
+            continue
+        instruction_input = data["instruction"] + data["input"]
+        # 调用 Milvus 搜索
+        milvus_results = search_data(instruction_input)
+        for result in milvus_results[0][1:]:  # 第一条是自己，从第二条开始
+            distance = result['distance']  # 与最近结果的距离
+            similar_id = result['index']  # 最近结果的主键ID
+
+            # 情况1：距离>0.9 → 判定为重复，跳过该数据，并标记ID为“需跳过”
+            if distance > 0.9:
+                skipped_ids.add(similar_id)  # 标记该ID，下次循环遇到直接跳过
+                print(f"判定为重复数据（距离：{distance:.2f}）：ID：{similar_id}")
+
+    # 打印所有需跳过的ID
+    print(f"skipped_ids:{skipped_ids}")
 
 
 if __name__ == "__main__":
-    search_data()
+    insert_data()
+    duplicate_remove()
