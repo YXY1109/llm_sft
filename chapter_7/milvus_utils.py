@@ -1,6 +1,7 @@
 import json
 import os
-from typing import Any, Dict, List
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import numpy as np
 from dotenv import load_dotenv
@@ -12,123 +13,130 @@ from chapter_7.utils import model_embedding_bgem3
 
 
 class MilvusHelper:
-    def __init__(self, db_name="", alias="medical"):
+    def __init__(self, db_name: str = "", alias: str = "medical"):
         load_dotenv()
-        self.db_name = db_name if db_name else os.getenv('MILVUS_DATABASE_NAME')
+        self.db_name = db_name if db_name else os.getenv('MILVUS_DATABASE_NAME', "default_db")
         self.alias = alias  # 连接别名，用于后续操作关联
-        self.collection = None
+        self.collection: Optional[Collection] = None
+        self.connected: bool = False
+        self._connect()
 
-    def connect(self, timeout: int = 30):
-        connections.connect(
-            alias=self.alias,
-            host=os.getenv('MILVUS_HOST'),
-            port=os.getenv('MILVUS_PORT'),
-            user=os.getenv('MILVUS_USER'),
-            password=os.getenv('MILVUS_PASSWORD'),
-            timeout=timeout
-        )
-        print(f"[MilvusHelper] Connected to Milvus successfully")
+    def _connect(self, timeout: int = 30) -> None:
+        """连接到Milvus并切换到指定数据库"""
+        if self.connected:
+            print(f"[MilvusHelper] Already connected to Milvus")
+            return
 
-        # 切换或创建数据库，需指定连接别名
-        if self.db_name not in db.list_database(using=self.alias):
-            db.create_database(self.db_name, using=self.alias, timeout=timeout)
-            print(f"[MilvusHelper] Database '{self.db_name}' created.")
-        else:
-            print(f"[MilvusHelper] Database '{self.db_name}' already exists.")
-        db.using_database(self.db_name, using=self.alias)  # 切换到目标数据库
+        try:
+            connections.connect(
+                alias=self.alias,
+                host=os.getenv('MILVUS_HOST', "localhost"),
+                port=os.getenv('MILVUS_PORT', "19530"),
+                user=os.getenv('MILVUS_USER'),
+                password=os.getenv('MILVUS_PASSWORD'),
+                timeout=timeout
+            )
+            self.connected = True
+            print(f"[MilvusHelper] Connected to Milvus successfully")
 
-    def get_or_create_collection(self, collection_name: str):
-        """
-        创建（或获取已存在）的 Collection，支持可变长 varchar 字段
-        """
+            # 切换或创建数据库
+            if self.db_name not in db.list_database(using=self.alias):
+                db.create_database(self.db_name, using=self.alias, timeout=timeout)
+                print(f"[MilvusHelper] Database '{self.db_name}' created.")
+            else:
+                print(f"[MilvusHelper] Database Database '{self.db_name}' already exists.")
+            db.using_database(self.db_name, using=self.alias)  # 切换到目标数据库
+        except Exception as e:
+            print(f"[MilvusHelper] Failed to connect to Milvus: {str(e)}")
+            raise
+
+    def get_or_create_collection(self, collection_name: str) -> Collection:
+        """创建（或获取已存在）的Collection"""
+        if not self.connected:
+            raise Exception("Not connected to Milvus. Call connect() first.")
+
         if utility.has_collection(collection_name, using=self.alias):
-            self.collection = Collection(
-                name=collection_name, using=self.alias)
+            self.collection = Collection(name=collection_name, using=self.alias)
             print(f"[MilvusHelper] Collection '{collection_name}' already exists.")
             return self.collection
 
+        # 定义集合结构
         fields = [
-            FieldSchema(name="index",
-                        dtype=DataType.INT64,
-                        is_primary=True),
-            FieldSchema(name="instruction",
-                        dtype=DataType.VARCHAR,
-                        max_length=1024),
-            FieldSchema(name="input",
-                        dtype=DataType.VARCHAR,
-                        max_length=1024),
-            FieldSchema(name="output",
-                        dtype=DataType.VARCHAR,
-                        max_length=4096),
-            FieldSchema(name="dense_vector",
-                        dtype=DataType.FLOAT_VECTOR,
-                        dim=1024),
-            FieldSchema(name="sparse_vector",
-                        dtype=DataType.SPARSE_FLOAT_VECTOR)
+            FieldSchema(name="index", dtype=DataType.INT64, is_primary=True),
+            FieldSchema(name="instruction", dtype=DataType.VARCHAR, max_length=1024),
+            FieldSchema(name="input", dtype=DataType.VARCHAR, max_length=1024),
+            FieldSchema(name="output", dtype=DataType.VARCHAR, max_length=4096),
+            FieldSchema(name="dense_vector", dtype=DataType.FLOAT_VECTOR, dim=1024),
+            FieldSchema(name="sparse_vector", dtype=DataType.SPARSE_FLOAT_VECTOR)
         ]
+
         schema = CollectionSchema(
             fields=fields,
             description="医疗数据集",
             enable_dynamic_field=False
         )
-        self.collection = Collection(name=collection_name, schema=schema, using=self.alias)
-        print(f"[MilvusHelper] Collection '{collection_name}' created success.")
-        return self.collection
 
-    def drop_collection(self, collection_name: str):
-        """删除 Collection"""
-        if utility.has_collection(collection_name, using=self.alias):
-            utility.drop_collection(collection_name, using=self.alias)
-            print(
-                f"[MilvusHelper] Collection '{collection_name}' dropped.")
-        else:
-            print(
-                f"[MilvusHelper] Collection '{collection_name}' does not exist.")
+        self.collection = Collection(name=collection_name, schema=schema, using=self.alias)
+        print(f"[MilvusHelper] Collection '{collection_name}' created successfully.")
+        return self.collection
 
     def build_index(self,
                     index_type: str = "IVF_FLAT",
                     metric_type: str = "COSINE",
-                    nlist: int = 4096):
-        """
-        为向量字段创建索引
-        """
-        index_params = {
+                    nlist: int = 4096) -> None:
+        """为向量字段创建索引"""
+        if not self.collection:
+            raise Exception("No collection selected. Call get_or_create_collection() first.")
+
+        # 创建稠密向量索引
+        dense_index_params = {
             "index_type": index_type,
             "metric_type": metric_type,
             "params": {"nlist": nlist}
         }
         self.collection.create_index(
             field_name="dense_vector",
-            index_params=index_params
+            index_params=dense_index_params
         )
 
+        # 创建稀疏向量索引
         sparse_index_params = {
             "index_type": "SPARSE_INVERTED_INDEX",
             "metric_type": "IP",
-            "params": {
-                "inverted_index_algo": "DAAT_MAXSCORE",
-            }
+            "params": {"inverted_index_algo": "DAAT_MAXSCORE"}
         }
-
         self.collection.create_index(
             field_name="sparse_vector",
             index_params=sparse_index_params
         )
-        self.collection.load()
-        print(f"[MilvusHelper] Index built on successful collection. "
-              f"(type={index_type}, metric={metric_type}).")
 
-    def insert(self, index: List[int], instructions: List[str], inputs: List[str], outputs: List[str],
+        self.collection.load()
+        print(f"[MilvusHelper] Index built successfully (type={index_type}, metric={metric_type}).")
+
+    def insert(self,
+               index: List[int],
+               instructions: List[str],
+               inputs: List[str],
+               outputs: List[str],
                vectors_dict: dict,
                batch_size: int = 5000) -> List[int]:
-        """
-        批量插入数据，返回主键列表
-        """
+        """批量插入数据，返回主键列表"""
+        if not self.collection:
+            raise Exception("No collection selected. Call get_or_create_collection() first.")
+
         vectors_list = vectors_dict.get("dense_vecs")
         sparse_list = vectors_dict.get("sparse_vecs")
 
+        if len(vectors_list) != len(sparse_list):
+            raise ValueError("vectors_dict must contain both 'dense_vecs' and 'sparse_vecs'")
+
+        if not all(len(lst) == len(index) for lst in [instructions, inputs, outputs, vectors_list, sparse_list]):
+            raise ValueError("All input lists must have the same length")
+
         ids = []
-        for i in range(0, len(vectors_list), batch_size):
+        total_batches = (len(index) + batch_size - 1) // batch_size
+
+        for i in tqdm(range(0, len(index), batch_size), desc="Inserting batches", total=total_batches):
             batch_id = index[i:i + batch_size]
             batch_instructions = instructions[i:i + batch_size]
             batch_inputs = inputs[i:i + batch_size]
@@ -144,35 +152,54 @@ class MilvusHelper:
                 batch_vectors,
                 batch_sparse
             ]
-            insert_res = self.collection.insert(data)
-            ids.extend(insert_res.primary_keys)
+
+            try:
+                insert_res = self.collection.insert(data)
+                ids.extend(insert_res.primary_keys)
+            except Exception as e:
+                print(f"[MilvusHelper] Error inserting batch {i // batch_size + 1}: {str(e)}")
+                raise
+
         return ids
 
-    def flush(self):
+    def flush(self) -> None:
         """强制刷盘"""
-        self.collection.flush()
-        print("[MilvusHelper] Flushed.")
+        if self.collection:
+            self.collection.flush()
+            self.collection.load()
+            print("[MilvusHelper] Data flushed to disk.")
 
     def search(self,
                query_vectors: np.ndarray,
                topk: int = 10,
                nprobe: int = 48,
                vector_field: str = "dense_vector",
-               output_fields: List[str] = None) -> List[List[Dict[str, Any]]]:
+               output_fields: Optional[List[str]] = None) -> List[List[Dict[str, Any]]]:
+        """搜索相似向量"""
+        if not self.collection:
+            raise Exception("No collection selected. Call get_or_create_collection() first.")
+
         if output_fields is None:
-            output_fields = ["instruction", "input", "output"]
+            output_fields = ["instruction", "input", "output", "index"]
+
         search_params = {
             "metric_type": "COSINE",
             "params": {"nprobe": nprobe}
         }
-        res = self.collection.search(
-            data=query_vectors.tolist(),
-            anns_field=vector_field,
-            param=search_params,
-            limit=topk,
-            output_fields=output_fields
-        )
-        # 整理格式
+
+        try:
+            res = self.collection.search(
+                data=query_vectors.tolist(),
+                anns_field=vector_field,
+                param=search_params,
+                limit=topk,
+                output_fields=output_fields
+            )
+        except Exception as e:
+            print(f"[MilvusHelper] Search error: {str(e)}")
+            raise
+
+        # 整理结果格式
         results = []
         for hits in res:
             hits_list = []
@@ -181,102 +208,183 @@ class MilvusHelper:
                 item["distance"] = hit.score
                 hits_list.append(item)
             results.append(hits_list)
+
         return results
 
-    def delete(self, expr: str):
-        """
-        根据表达式删除
-        例：expr = "id in [1, 2, 3]"
-        """
-        self.collection.delete(expr=expr)
-        print(f"[MilvusHelper] Deleted by expr: {expr}")
+    def delete(self, expr: str) -> None:
+        """根据表达式删除数据"""
+        if not self.collection:
+            raise Exception("No collection selected. Call get_or_create_collection() first.")
+
+        try:
+            self.collection.delete(expr=expr)
+            print(f"[MilvusHelper] Deleted records matching expression: {expr}")
+        except Exception as e:
+            print(f"[MilvusHelper] Error deleting records: {str(e)}")
+            raise
 
     def count(self) -> int:
-        """返回 Collection 行数"""
-        self.collection.flush()
+        """返回Collection中的记录数"""
+        if not self.collection:
+            raise Exception("No collection selected. Call get_or_create_collection() first.")
+
+        self.flush()
         return self.collection.num_entities
 
-    def release(self):
-        """释放 Collection 内存"""
-        self.collection.release()
-        print("[MilvusHelper] Collection released.")
+    def release(self) -> None:
+        """释放Collection内存"""
+        if self.collection:
+            self.collection.release()
+            print("[MilvusHelper] Collection released from memory.")
 
-    def disconnect(self):
-        """断开 Milvus"""
-        connections.disconnect(self.alias)
-        print("[MilvusHelper] Disconnected.")
+    def disconnect(self) -> None:
+        """断开Milvus连接"""
+        if self.connected:
+            connections.disconnect(self.alias)
+            self.connected = False
+            print("[MilvusHelper] Disconnected from Milvus.")
+
+    def load_and_preprocess_data(self, json_path: str) -> Tuple[List[int], List[str], List[str], List[str], List[str]]:
+        """加载并预处理JSON数据"""
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                data_list = json.load(f)
+        except Exception as e:
+            print(f"[MilvusHelper] Error loading data from {json_path}: {str(e)}")
+            raise
+
+        id_list = []
+        instruction_list = []
+        input_list = []
+        output_list = []
+        instruction_input_list = []
+
+        for idx, data in enumerate(data_list, 1):
+            id_list.append(idx)
+            instruction_list.append(data.get("instruction", ""))
+            input_list.append(data.get("input", ""))
+            output_list.append(data.get("output", ""))
+            instruction_input_list.append(f"{data.get('instruction', '')}{data.get('input', '')}")
+
+        return id_list, instruction_list, input_list, output_list, instruction_input_list
+
+    def insert_from_json(self, json_path: str, collection_name: str, batch_size: int = 5000) -> None:
+        """从JSON文件插入数据到指定集合"""
+        # 连接并初始化集合
+        self.get_or_create_collection(collection_name)
+        self.build_index()
+        print("Milvus initialized, starting data insertion...")
+
+        # 加载和预处理数据
+        id_list, instruction_list, input_list, output_list, instruction_input_list = self.load_and_preprocess_data(
+            json_path)
+
+        # 生成嵌入向量
+        print("Generating embeddings...")
+        bge_dict = model_embedding_bgem3(instruction_input_list)
+
+        # 插入数据
+        print(f"Inserting {len(id_list)} records...")
+        self.insert(
+            id_list,
+            instruction_list,
+            input_list,
+            output_list,
+            bge_dict,
+            batch_size=batch_size
+        )
+
+        self.flush()
+        print(f"Insertion complete. Total rows: {self.count()}")
+
+    def search_similar(self, query: str, topk: int = 10) -> List[List[Dict[str, Any]]]:
+        """搜索与查询相似的记录"""
+        if not self.collection:
+            raise Exception("No collection selected. Call get_or_create_collection() first.")
+
+        # 生成查询向量
+        bge_dict = model_embedding_bgem3(query)
+        vectors_list = bge_dict.get("dense_vecs")
+
+        # 执行搜索
+        return self.search(np.array(vectors_list), topk=topk)
+
+    def remove_duplicates(self, json_path: str, collection_name: str, threshold: float = 0.9) -> Set[int]:
+        """移除重复数据，返回被标记为重复的ID集合"""
+        if not self.collection:
+            self.get_or_create_collection(collection_name)
+
+        # 加载数据
+        _, _, _, _, instruction_input_list = self.load_and_preprocess_data(json_path)
+
+        skipped_ids: Set[int] = set()
+
+        # 检查重复数据
+        for index, text in tqdm(enumerate(instruction_input_list, 1),
+                                desc="Checking for duplicates",
+                                total=len(instruction_input_list)):
+            if index in skipped_ids:
+                continue
+
+            # 搜索相似数据
+            try:
+                milvus_results = self.search_similar(text, topk=10)
+
+                # 跳过第一个结果（自身），检查其他结果
+                for result in milvus_results[0][1:]:
+                    distance = result.get('distance', 0)
+                    similar_id = result.get('index')
+
+                    if distance > threshold and similar_id not in skipped_ids:
+                        skipped_ids.add(similar_id)
+                        print(f"Marked as duplicate (distance: {distance:.2f}): ID {similar_id}")
+
+            except Exception as e:
+                print(f"Error checking duplicates for ID {index}: {str(e)}")
+                continue
+
+        print(f"Found {len(skipped_ids)} duplicate records")
+        return skipped_ids
 
 
-def insert_data(json_path=r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all_test.json"):
-    helper = MilvusHelper()
-    helper.connect()
-    helper.get_or_create_collection("demo_test")
-    helper.build_index()
-    print("Milvus初始化完成，开始插入数据")
+def main():
+    # 配置
+    json_path = Path(r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all_test.json")
+    collection_name = "demo_test"
 
-    with open(json_path, "r", encoding="utf-8") as f:
-        data_list = json.load(f)
+    # 初始化MilvusHelper
+    milvus_helper = MilvusHelper()
 
-    id_list = []
-    instruction_list = []
-    input_list = []
-    output_list = []
-    instruction_input_list = []
+    try:
+        # 插入数据
+        milvus_helper.insert_from_json(str(json_path), collection_name, batch_size=5)
+        print(f"Total rows: {milvus_helper.count()}")
 
-    for idx, data in enumerate(data_list, 1):
-        id_list.append(idx)
-        instruction_list.append(data["instruction"])
-        input_list.append(data["input"])
-        output_list.append(data["output"])
-        instruction_input_list.append(data["instruction"] + data["input"])
+        # 移除重复数据
+        duplicate_ids = milvus_helper.remove_duplicates(str(json_path), collection_name)
+        print(f"Skipped duplicate IDs: {duplicate_ids}")
 
-    bge_dict = model_embedding_bgem3(instruction_input_list)
+        # 示例查询
+        sample_query = "头发越来越少，只掉不长，不知是心里抑郁造成"
+        print(f"\nSearching for: {sample_query}")
+        results = milvus_helper.search_similar(sample_query, topk=5)
+        print(f"Search results:{results}")
 
-    helper.insert(id_list, instruction_list, input_list, output_list, bge_dict, batch_size=5)
-    helper.flush()
-    print("Total rows:", helper.count())
+        # 打印前5个结果
+        for i, result in enumerate(results[0][:5], 1):
+            print(f"\nResult {i}:")
+            print(f"Distance: {result['distance']:.4f}")
+            print(f"Instruction: {result['entity']['instruction']}")
+            print(f"Input: {result['entity']['input']}")
+            print(f"Output: {result['entity']['output']}")
 
-
-def search_data(search_query="头发越来越少，只掉不长，不知是心里抑郁造成"):
-    helper = MilvusHelper()
-    helper.connect()
-    helper.get_or_create_collection("demo_test")
-
-    bge_dict = model_embedding_bgem3(search_query)
-    vectors_list = bge_dict.get("dense_vecs")
-    result_data = helper.search(vectors_list)
-    print(result_data)
-    return result_data
-
-
-def duplicate_remove():
-    json_path = r"D:\PycharmProjects\llm_sft\chapter_7\merge_data\4_all_test.json"
-
-    with open(json_path, "r", encoding="utf-8") as f:
-        data_list = json.load(f)
-
-    skipped_ids = set()
-
-    for index, data in tqdm(enumerate(data_list, 1)):
-        if index in skipped_ids:
-            print(f"跳过重复数据：ID：{index}")
-            continue
-        instruction_input = data["instruction"] + data["input"]
-        # 调用 Milvus 搜索
-        milvus_results = search_data(instruction_input)
-        for result in milvus_results[0][1:]:  # 第一条是自己，从第二条开始
-            distance = result['distance']  # 与最近结果的距离
-            similar_id = result['index']  # 最近结果的主键ID
-
-            # 情况1：距离>0.9 → 判定为重复，跳过该数据，并标记ID为“需跳过”
-            if distance > 0.9:
-                skipped_ids.add(similar_id)  # 标记该ID，下次循环遇到直接跳过
-                print(f"判定为重复数据（距离：{distance:.2f}）：ID：{similar_id}")
-
-    # 打印所有需跳过的ID
-    print(f"skipped_ids:{skipped_ids}")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+    finally:
+        # 释放资源并断开连接
+        # milvus_helper.release()
+        milvus_helper.disconnect()
 
 
 if __name__ == "__main__":
-    insert_data()
-    duplicate_remove()
+    main()
