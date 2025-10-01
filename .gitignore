@@ -209,3 +209,9 @@ __marimo__/
 /chapter_4/models_lora/
 /chapter_4/models_lora_merge/
 .idea/
+/chapter_7/data_json/train_0001_of_0001.json
+/chapter_7/data_json/med_zh/train_zh.json
+/chapter_7/data_json/med_en/train_en.json
+/chapter_7/merge_data/1_medical.json
+/chapter_7/merge_data/2_medical.json
+/chapter_7/merge_data/4_all.json
